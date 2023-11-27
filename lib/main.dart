@@ -9,16 +9,32 @@ import 'package:flutter_todos/repositories/database.dart';
 import 'package:flutter_todos/repositories/todos.dart';
 import 'package:flutter_todos/router.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(
+      FlutterTodos.bootstrap(
+        base: (context, state) => MaterialApp.router(
+          title: 'Flutter Todos',
+          routerConfig: router,
+          theme: ThemeData.from(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.indigo,
+            ),
+          ),
+        ),
+      ),
+    );
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FlutterTodos extends StatelessWidget {
+  final BlocWidgetBuilder<DirectoriesLoadedState> base;
+
+  const FlutterTodos._({required this.base});
+
+  factory FlutterTodos.bootstrap({
+    required BlocWidgetBuilder<DirectoriesLoadedState> base,
+  }) =>
+      FlutterTodos._(base: base);
 
   @override
   Widget build(BuildContext context) => AppRepository.getProvider(
-        // Allows for getting the context that now includes [AppRepository].
         child: Builder(
           builder: (context) => BlocConsumer<DirectoryBloc, DirectoryState>(
             bloc: context.read<AppRepository>().directories,
@@ -46,12 +62,8 @@ class MyApp extends StatelessWidget {
                     ),
                   );
                 case DirectoriesLoadedState():
-                  return MultiRepositoryProvider(
-                    providers: [
-                      DatabaseRepository.getProvider(
-                        directory: state.directories.documents,
-                      ),
-                    ],
+                  return DatabaseRepository.getProvider(
+                    directory: state.directories.documents,
                     child: Builder(
                       builder: (context) => MultiRepositoryProvider(
                         providers: [
@@ -62,16 +74,7 @@ class MyApp extends StatelessWidget {
                             database: context.read<DatabaseRepository>(),
                           ),
                         ],
-                        child: MaterialApp.router(
-                          title: 'Sample Flutter Project',
-                          routerConfig: router,
-                          theme: ThemeData(
-                            colorScheme: ColorScheme.fromSeed(
-                              seedColor: Colors.deepPurple,
-                            ),
-                            useMaterial3: true,
-                          ),
-                        ),
+                        child: base(context, state),
                       ),
                     ),
                   );

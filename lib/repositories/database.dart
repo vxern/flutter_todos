@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:realm/realm.dart' as realm;
 import 'package:sprint/sprint.dart';
@@ -45,9 +46,11 @@ class DatabaseRepository {
 
   static RepositoryProvider<DatabaseRepository> getProvider({
     required Directory directory,
+    required Widget child,
   }) =>
-      RepositoryProvider(
-        create: (context) => DatabaseRepository.create(directory: directory),
+      RepositoryProvider.value(
+        value: DatabaseRepository.create(directory: directory),
+        child: child,
       );
 
   Future<void> dispose() async {

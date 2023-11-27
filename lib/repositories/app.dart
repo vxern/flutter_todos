@@ -23,11 +23,9 @@ class AppRepository extends AppRepositoryBase with DirectoryLoading {
     return AppRepository._(directories: directories);
   }
 
-  Future<void> load() async {
-    await Future.wait([
-      loadDirectories(),
-    ]);
-  }
+  Future<void> load() async => Future.wait([
+        loadDirectories(),
+      ]);
 
   static RepositoryProvider<AppRepository> getProvider({
     required Widget child,

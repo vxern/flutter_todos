@@ -17,8 +17,8 @@ class TodoRepository {
   static RepositoryProvider<TodoRepository> getProvider({
     required DatabaseRepository database,
   }) =>
-      RepositoryProvider(
-        create: (context) => TodoRepository.create(database: database),
+      RepositoryProvider.value(
+        value: TodoRepository.create(database: database),
       );
 
   Todo getById({required Todos todos, required String id}) {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:realm/realm.dart';
 import 'package:universal_io/io.dart';
@@ -42,9 +43,8 @@ class AuthenticationRepository {
   static RepositoryProvider<AuthenticationRepository> getProvider({
     required DatabaseRepository database,
   }) =>
-      RepositoryProvider(
-        create: (context) =>
-            AuthenticationRepository.create(database: database),
+      RepositoryProvider.value(
+        value: AuthenticationRepository.create(database: database),
       );
 
   Future<String> _hash({required String password}) async {
