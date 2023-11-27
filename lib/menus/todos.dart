@@ -51,7 +51,7 @@ class TodosPage extends StatelessWidget {
                   builder: (context, state) {
                     if (state.entries.isEmpty) {
                       return const Text(
-                        'No to-do lists yet.\nPress "Create" to create one.',
+                        "No to-do lists yet.\nPress 'Create' to create one.",
                         textAlign: TextAlign.center,
                       );
                     }
@@ -77,9 +77,10 @@ class TodosPage extends StatelessWidget {
                         return GestureDetector(
                           child: ListTile(
                             trailing: GestureDetector(
-                              child: const Icon(
+                              child: Icon(
                                 Icons.delete_outline,
-                                color: Colors.white,
+                                color:
+                                    Theme.of(context).listTileTheme.iconColor,
                               ),
                               onTap: () {
                                 final authentication =
@@ -131,9 +132,10 @@ class TodosPage extends StatelessWidget {
                                 databaseTransaction!.commit();
                                 databaseTransaction = null;
                               },
-                              style: const TextStyle(color: Colors.white),
+                              style: Theme.of(context).textTheme.labelLarge,
                             ),
-                            tileColor: Colors.grey.shade400,
+                            tileColor:
+                                Theme.of(context).listTileTheme.tileColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),

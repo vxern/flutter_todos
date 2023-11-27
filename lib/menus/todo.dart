@@ -58,7 +58,7 @@ class _TodoPageState extends State<TodoPage> {
                   builder: (context, state) {
                     if (state.rows.isEmpty) {
                       return const Text(
-                        'No to-dos yet.\nPress "Create" to create one.',
+                        "No to-do's yet.\nPress 'Create' to create one.",
                         textAlign: TextAlign.center,
                       );
                     }
@@ -82,9 +82,9 @@ class _TodoPageState extends State<TodoPage> {
 
                         return ListTile(
                           trailing: GestureDetector(
-                            child: const Icon(
+                            child: Icon(
                               Icons.delete_outline,
-                              color: Colors.white,
+                              color: Theme.of(context).listTileTheme.iconColor,
                             ),
                             onTap: () {
                               final authentication =
@@ -136,9 +136,9 @@ class _TodoPageState extends State<TodoPage> {
                               databaseTransaction!.commit();
                               databaseTransaction = null;
                             },
-                            style: const TextStyle(color: Colors.black),
+                            style: Theme.of(context).textTheme.labelLarge,
                           ),
-                          tileColor: Colors.amber.shade600,
+                          tileColor: Theme.of(context).listTileTheme.tileColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25),
                           ),
