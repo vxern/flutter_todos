@@ -26,8 +26,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  import_sorter: ^4.6.0
   words: ^0.4.4
 
 flutter:
   uses-material-design: true
 
+import_sorter:
+  comments: false

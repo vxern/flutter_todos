@@ -3,10 +3,11 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:realm/realm.dart';
-import 'package:flutter_todos/repositories/database.dart';
-import 'package:flutter_todos/constants.dart' as constants;
-import 'package:flutter_todos/structs/account.dart';
 import 'package:universal_io/io.dart';
+
+import 'package:flutter_todos/constants.dart' as constants;
+import 'package:flutter_todos/repositories/database.dart';
+import 'package:flutter_todos/structs/account.dart';
 
 class AuthenticationRepository {
   final KdfAlgorithm _argon2;

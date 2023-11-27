@@ -1,11 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:realm/realm.dart' as realm;
-
 import 'package:sprint/sprint.dart';
 import 'package:universal_io/io.dart';
 
-import 'package:flutter_todos/structs/account.dart';
 import 'package:flutter_todos/constants.dart' as constants;
+import 'package:flutter_todos/structs/account.dart';
 
 final _schemas = List<realm.SchemaObject>.unmodifiable([
   Account.schema,

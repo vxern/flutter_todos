@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:sprint/sprint.dart';
+
+import 'package:flutter_todos/repositories/authentication.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

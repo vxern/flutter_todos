@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:flutter_todos/menus/todo.dart';
-import 'package:flutter_todos/menus/todos.dart';
-import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/menus/home.dart';
 import 'package:flutter_todos/menus/login.dart';
 import 'package:flutter_todos/menus/register.dart';
+import 'package:flutter_todos/menus/todo.dart';
+import 'package:flutter_todos/menus/todos.dart';
+import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/repositories/todos.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();

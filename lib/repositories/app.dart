@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_todos/repositories/app/directories.dart';
 import 'package:sprint/sprint.dart';
+
+import 'package:flutter_todos/repositories/app/directories.dart';
 
 class AppRepositoryBase {
   final Sprint log;
