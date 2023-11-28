@@ -46,13 +46,13 @@ void main() {
       tearDown(() async => application.dispose());
 
       test('initialises the repository.', () async {
-        stubLoaderWithSuccess(application.directoriesLoader);
+        stubLoaderWithSuccess(application.directories);
 
         expect(application.initialise(), completes);
       });
 
       test('throws a [StateError] when already initialised.', () async {
-        stubLoaderWithSuccess(application.directoriesLoader);
+        stubLoaderWithSuccess(application.directories);
 
         await expectLater(application.initialise(), completes);
         await expectLater(
@@ -64,7 +64,7 @@ void main() {
       test(
         'throws a [StateError] when [ApplicationRepository] is disposed.',
         () async {
-          stubLoaderWithSuccess(application.directoriesLoader);
+          stubLoaderWithSuccess(application.directories);
 
           await expectLater(application.dispose(), completes);
           await expectLater(application.initialise, throwsA(isA<StateError>()));
@@ -74,7 +74,7 @@ void main() {
       test(
         'throws an [InitialisationException] on failure to initialise.',
         () async {
-          stubLoaderWithFailure(application.directoriesLoader);
+          stubLoaderWithFailure(application.directories);
 
           await expectLater(
             application.initialise,
@@ -86,14 +86,14 @@ void main() {
       test(
         'does not throw when attempting to initialise again after failure.',
         () async {
-          stubLoaderWithFailure(application.directoriesLoader);
+          stubLoaderWithFailure(application.directories);
 
           await expectLater(
             application.initialise,
             throwsA(isA<InitialisationException>()),
           );
 
-          stubLoaderWithSuccess(application.directoriesLoader);
+          stubLoaderWithSuccess(application.directories);
 
           await expectLater(application.initialise(), completes);
         },
@@ -112,14 +112,14 @@ void main() {
           ),
         );
 
-        stubLoaderWithFailure(application.directoriesLoader);
+        stubLoaderWithFailure(application.directories);
 
         await expectLater(
           application.initialise,
           throwsA(isA<InitialisationException>()),
         );
 
-        stubLoaderWithSuccess(application.directoriesLoader);
+        stubLoaderWithSuccess(application.directories);
 
         await expectLater(application.initialise(), completes);
       });
@@ -138,7 +138,7 @@ void main() {
 
         expect(application.isDisposed, isTrue);
         expect(application.initialisationCubit, isClosed);
-        expect(application.directoriesLoader.isDisposed, isTrue);
+        expect(application.directories.isDisposed, isTrue);
       });
 
       test(

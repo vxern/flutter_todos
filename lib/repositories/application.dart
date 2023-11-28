@@ -35,12 +35,14 @@ class ApplicationRepository with Initialisable, Disposable {
   // * Visible for testing.
   final initialisationCubit = InitialisationCubit();
 
-  final DirectoriesLoader directoriesLoader;
+  final DirectoriesLoader directories;
 
   InitialisationState get initialisationState => initialisationCubit.state;
 
-  ApplicationRepository({DirectoriesLoader? directoriesLoader})
-      : directoriesLoader =
+  ApplicationRepository({
+    // * Visible for testing.
+    DirectoriesLoader? directoriesLoader,
+  }) : directories =
             directoriesLoader ?? DirectoriesLoader(bloc: DirectoriesBloc());
 
   // ! Throws an [InitialisationException] upon failing to initialise.
@@ -52,8 +54,7 @@ class ApplicationRepository with Initialisable, Disposable {
       );
     }
 
-    if (initialisationCubit.state is InitialisingState ||
-        initialisationCubit.state is InitialisedState) {
+    if (initialisationCubit.isInitialised) {
       throw StateError(
         'Attempted to initialise ApplicationRepository when already '
         'initialised.',
@@ -63,7 +64,7 @@ class ApplicationRepository with Initialisable, Disposable {
     initialisationCubit.declareInitialising();
 
     try {
-      await Future.wait([directoriesLoader.load()]);
+      await Future.wait([directories.load()]);
     } on DirectoriesLoadException {
       initialisationCubit.declareFailed();
 
@@ -78,7 +79,7 @@ class ApplicationRepository with Initialisable, Disposable {
   }) =>
       RepositoryProvider.value(
         value: ApplicationRepository()
-          ..directoriesLoader.bloc.add(const DirectoriesLoading()),
+          ..directories.bloc.add(const DirectoriesLoading()),
         child: child,
       );
 
@@ -88,7 +89,7 @@ class ApplicationRepository with Initialisable, Disposable {
 
     return Future.wait([
       initialisationCubit.close(),
-      directoriesLoader.dispose(),
+      directories.dispose(),
     ]);
   }
 }

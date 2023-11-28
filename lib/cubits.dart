@@ -21,6 +21,9 @@ final class InitialisationFailedState extends InitialisationState {
 }
 
 class InitialisationCubit extends Cubit<InitialisationState> {
+  bool get isInitialised =>
+      state is InitialisingState || state is InitialisedState;
+
   InitialisationCubit() : super(const UninitialisedState());
 
   void declareInitialising() => emit(const InitialisingState());
