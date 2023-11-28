@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_todos/cubits.dart';
-import 'package:flutter_todos/exceptions.dart';
 import 'package:flutter_todos/utils.dart';
 import 'package:realm/realm.dart';
 import 'package:sprint/sprint.dart';

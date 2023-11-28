@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_todos/exceptions.dart';
 import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
 import 'package:path_provider/path_provider.dart' as pathProvider;
 import 'package:universal_io/io.dart';

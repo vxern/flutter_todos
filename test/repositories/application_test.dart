@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_todos/cubits.dart';
-import 'package:flutter_todos/exceptions.dart';
 import 'package:flutter_todos/repositories/application.dart';
 import 'package:flutter_todos/repositories/loaders/directories.dart';
 import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';

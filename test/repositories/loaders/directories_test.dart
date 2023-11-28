@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_todos/exceptions.dart';
+import 'package:flutter_todos/repositories/application.dart';
 import 'package:flutter_todos/repositories/loaders/directories.dart';
 
 import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_io/io.dart';
 

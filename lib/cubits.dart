@@ -32,3 +32,7 @@ class InitialisationCubit extends Cubit<InitialisationState> {
 
   void declareFailed() => emit(const InitialisationFailedState());
 }
+
+class InitialisationException implements Exception {
+  const InitialisationException();
+}
