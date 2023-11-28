@@ -8,18 +8,12 @@ import 'package:flutter_todos/structs/account.dart';
 class TodoRepository {
   final DatabaseRepository _database;
 
-  TodoRepository._({required DatabaseRepository database})
-      : _database = database;
-
-  factory TodoRepository.create({required DatabaseRepository database}) =>
-      TodoRepository._(database: database);
+  TodoRepository({required DatabaseRepository database}) : _database = database;
 
   static RepositoryProvider<TodoRepository> getProvider({
     required DatabaseRepository database,
   }) =>
-      RepositoryProvider.value(
-        value: TodoRepository.create(database: database),
-      );
+      RepositoryProvider.value(value: TodoRepository(database: database));
 
   Todo getById({required Todos todos, required String id}) {
     final Todo todo;
@@ -41,7 +35,7 @@ class TodoRepository {
       throw StateError('Attempted to create todo while unauthenticated.');
     }
 
-    final database = _database.database;
+    final database = _database.realm;
 
     final todo = Todo(Uuid.v4(), 'Draft', DateTime.now());
 
@@ -70,7 +64,7 @@ class TodoRepository {
       throw StateError('Attempted to remove todo while unauthenticated.');
     }
 
-    final database = _database.database;
+    final database = _database.realm;
 
     try {
       await database.writeAsync(() => database.deleteMany(todo.rows));
@@ -88,7 +82,7 @@ class TodoRepository {
       throw StateError('Attempted to add todo row while unauthenticated.');
     }
 
-    final database = _database.database;
+    final database = _database.realm;
 
     final row = TodoRow('');
 
@@ -109,7 +103,7 @@ class TodoRepository {
       throw StateError('Attempted to remove todo row while unauthenticated.');
     }
 
-    final database = _database.database;
+    final database = _database.realm;
 
     try {
       await database.writeAsync(

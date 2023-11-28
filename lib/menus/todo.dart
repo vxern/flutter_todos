@@ -108,7 +108,7 @@ class _TodoPageState extends State<TodoPage> {
                             ),
                             onChanged: (value) {
                               databaseTransaction ??=
-                                  database.database.beginWrite();
+                                  database.realm.beginWrite();
 
                               row.contents = value;
                             },

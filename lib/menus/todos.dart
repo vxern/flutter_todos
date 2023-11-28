@@ -104,7 +104,7 @@ class TodosPage extends StatelessWidget {
                               ),
                               onChanged: (value) {
                                 databaseTransaction ??=
-                                    database.database.beginWrite();
+                                    database.realm.beginWrite();
 
                                 todo.title = value;
                               },
