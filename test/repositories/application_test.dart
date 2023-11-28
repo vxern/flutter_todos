@@ -16,7 +16,7 @@ class MockDirectoryLoader extends Mock implements DirectoriesLoader {}
 final directories = Directories(documents: Directory('/'));
 final directoriesLoader = DirectoriesLoader(bloc: DirectoriesBloc());
 
-void completeDirectoriesLoader(DirectoriesLoader directoriesLoader) {
+void stub(DirectoriesLoader directoriesLoader) {
   final bloc = DirectoriesBloc();
   when(() => directoriesLoader.bloc).thenReturn(bloc);
   when(directoriesLoader.dispose).thenAnswer((_) async {});
@@ -40,7 +40,7 @@ void main() {
           final directoriesLoader = MockDirectoryLoader();
           application =
               ApplicationRepository(directoriesLoader: directoriesLoader);
-          completeDirectoriesLoader(directoriesLoader);
+          stub(directoriesLoader);
         },
       );
       tearDown(() async => application.dispose());
@@ -55,10 +55,7 @@ void main() {
         stubLoaderWithSuccess(application.directories);
 
         await expectLater(application.initialise(), completes);
-        await expectLater(
-          application.initialise,
-          throwsA(isA<StateError>()),
-        );
+        await expectLater(application.initialise, throwsA(isA<StateError>()));
       });
 
       test(
@@ -76,7 +73,7 @@ void main() {
         () async {
           stubLoaderWithFailure(application.directories);
 
-          await expectLater(
+          expect(
             application.initialise,
             throwsA(isA<InitialisationException>()),
           );
@@ -134,7 +131,7 @@ void main() {
       );
 
       test('disposes of the repository.', () async {
-        await expectLater(application.dispose, completes);
+        await expectLater(application.dispose(), completes);
 
         expect(application.isDisposed, isTrue);
         expect(application.initialisationCubit, isClosed);
@@ -144,8 +141,8 @@ void main() {
       test(
         'is idempotent.',
         () async {
-          await expectLater(application.dispose, completes);
-          await expectLater(application.dispose, completes);
+          await expectLater(application.dispose(), completes);
+          await expectLater(application.dispose(), completes);
         },
       );
     });
