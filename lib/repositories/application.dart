@@ -28,12 +28,12 @@ abstract class ApplicationResourceLoader<T, B extends Bloc>
   }
 }
 
-class ApplicationRepository with Initialisable {
-  // * Visible for testing.
-  final initialisationCubit = InitialisationCubit();
+class ApplicationRepository with Initialisable, Disposable {
+  @override
+  bool isDisposed = false;
 
   // * Visible for testing.
-  bool isDisposed = false;
+  final initialisationCubit = InitialisationCubit();
 
   final DirectoriesLoader directoriesLoader;
 
@@ -82,6 +82,7 @@ class ApplicationRepository with Initialisable {
         child: child,
       );
 
+  @override
   Future<void> dispose() {
     isDisposed = true;
 
