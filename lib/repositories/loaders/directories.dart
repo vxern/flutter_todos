@@ -44,10 +44,12 @@ class DirectoriesLoader
     final Directory documents;
     try {
       documents = await getApplicationDocumentsDirectory();
-    } on pathProvider.MissingPlatformDirectoryException {
+    } on pathProvider.MissingPlatformDirectoryException catch (exception) {
       bloc.declareFailed();
 
-      log.severe('Unable to get documents directory. Missing permissions?');
+      log
+        ..severe('Unable to get documents directory. Missing permissions?')
+        ..severe(exception);
 
       throw const DirectoriesLoadException();
     }
