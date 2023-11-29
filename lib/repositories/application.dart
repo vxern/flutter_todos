@@ -79,15 +79,6 @@ class ApplicationRepository with Initialisable, Disposable {
     initialisationCubit.declareInitialised();
   }
 
-  static RepositoryProvider<ApplicationRepository> getProvider({
-    required Widget child,
-  }) =>
-      RepositoryProvider.value(
-        value: ApplicationRepository()
-          ..directories.bloc.add(const DirectoriesLoading()),
-        child: child,
-      );
-
   @override
   Future<void> dispose() {
     isDisposed = true;

@@ -10,11 +10,6 @@ class TodoRepository {
 
   TodoRepository({required DatabaseRepository database}) : _database = database;
 
-  static RepositoryProvider<TodoRepository> getProvider({
-    required DatabaseRepository database,
-  }) =>
-      RepositoryProvider.value(value: TodoRepository(database: database));
-
   Todo getById({required Todos todos, required String id}) {
     final Todo todo;
     try {

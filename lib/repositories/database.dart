@@ -99,11 +99,6 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
     log.success('Database opened.');
   }
 
-  static RepositoryProvider<DatabaseRepository> getProvider({
-    required Directory directory,
-  }) =>
-      RepositoryProvider.value(value: DatabaseRepository(directory: directory));
-
   @override
   Future<void> dispose() {
     isDisposed = true;
