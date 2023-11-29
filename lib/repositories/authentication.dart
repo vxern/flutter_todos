@@ -164,6 +164,7 @@ class AuthenticationRepository with Loggable, Disposable {
 
   Future<void> logout() async {
     _account = null;
+    initialisationCubit.declareUninitialised();
   }
 
   @override

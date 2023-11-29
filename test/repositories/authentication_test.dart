@@ -351,6 +351,41 @@ void main() {
       });
     });
 
+    group('logout()', () {
+      test('logs the user out.', () async {
+        authentication = AuthenticationRepository(
+          database: database,
+          deriveHashDebug: ({required password}) async => password,
+        );
+
+        final account = MockAccount();
+        stubAccount(account);
+        stubFinder<Account>(database.realm, () => account);
+
+        await expectLater(
+          authentication.login(username: username, password: password),
+          completes,
+        );
+        await expectLater(authentication.logout(), completes);
+
+        expect(() => authentication.account, throwsA(isA<TypeError>()));
+        expect(
+          authentication.initialisationCubit.state,
+          isA<UninitialisedState>(),
+        );
+      });
+
+      test('is idempotent.', () async {
+        authentication = AuthenticationRepository(
+          database: database,
+          deriveHashDebug: ({required password}) async => password,
+        );
+
+        await expectLater(authentication.logout(), completes);
+        await expectLater(authentication.logout(), completes);
+      });
+    });
+
     group('dispose()', () {
       test('disposes of the repository.', () async {
         authentication = AuthenticationRepository(
