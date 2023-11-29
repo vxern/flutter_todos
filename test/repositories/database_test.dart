@@ -19,6 +19,41 @@ final directory = Directory('');
 
 void main() {
   group('DatabaseRepository', () {
+    group('realm', () {
+      late DatabaseRepository database;
+
+      tearDown(() async {
+        await database.dispose();
+      });
+
+      test(
+        'throws [StateError] when accessed before '
+        '[DatabaseRepository.initialise()] called.',
+        () {
+          database = DatabaseRepository(
+            directory: directory,
+            openRealmDebug: ({required path}) => MockRealm(),
+          );
+
+          expect(() => database.realm, throwsStateError);
+        },
+      );
+
+      test(
+        'returns [Realm] if initialised.',
+        () async {
+          database = DatabaseRepository(
+            directory: directory,
+            openRealmDebug: ({required path}) => MockRealm(),
+          );
+
+          await database.initialise();
+
+          expect(() => database.realm, returnsNormally);
+        },
+      );
+    });
+
     group('initialise()', () {
       late DatabaseRepository database;
 

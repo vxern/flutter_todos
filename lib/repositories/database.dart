@@ -41,7 +41,13 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
   Realm? _realm;
 
   /// ! Throws a [StateError] if [DatabaseRepository] has not been initialised.
-  Realm get realm => _realm!;
+  Realm get realm {
+    if (_realm == null) {
+      throw StateError('Attempted to access realm before initialisation.');
+    }
+
+    return _realm!;
+  }
 
   // * Visible for testing.
   final RealmOpener openRealmDebug;
