@@ -155,9 +155,7 @@ void main() {
         () async {
           authentication = AuthenticationRepository(
             database: database,
-            deriveHashDebug: ({required password}) async {
-              throw StateError('');
-            },
+            deriveHashDebug: ({required password}) async => password,
           );
 
           await expectLater(authentication.dispose(), completes);
@@ -184,6 +182,47 @@ void main() {
         expect(
           authentication.login(username: username, password: password),
           throwsA(isA<StateError>()),
+        );
+      });
+
+      test('updates the initialisation state.', () async {
+        authentication = AuthenticationRepository(
+          database: database,
+          deriveHashDebug: ({required password}) async => password,
+        );
+
+        unawaited(
+          expectLater(
+            authentication.initialisationCubit.stream,
+            emitsInOrder([
+              isA<InitialisingState>(),
+              isA<InitialisationFailedState>(),
+              isA<InitialisingState>(),
+              isA<InitialisedState>(),
+            ]),
+          ),
+        );
+
+        stubFinder<Account>(database.realm, () => null);
+
+        await expectLater(
+          () async => authentication.login(
+            username: username,
+            password: password,
+          ),
+          throwsA(isA<AccountNotExistsException>()),
+        );
+
+        final account = MockAccount();
+        stubAccount(account);
+        stubFinder<Account>(database.realm, () => account);
+
+        await expectLater(
+          authentication.login(
+            username: username,
+            password: password,
+          ),
+          completes,
         );
       });
     });
