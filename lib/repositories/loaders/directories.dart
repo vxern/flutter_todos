@@ -27,14 +27,12 @@ class DirectoriesLoader
   }) : getApplicationDocumentsDirectory = getApplicationDocumentsDirectory ??
             pathProvider.getApplicationDocumentsDirectory;
 
-  /// ! Throws a [DirectoriesLoadException] upon failing to load directories.
-  ///
-  /// ! Throws a [StateError] when the repository is disposed.
+  /// ! Throws:
+  /// - ! [DirectoriesLoadException] upon failing to load directories.
+  /// - ! (propagated) [StateError] if the repository is disposed.
   @override
   Future<Directories> load() async {
-    if (isDisposed) {
-      throw StateError('Attempted to load directories when disposed.');
-    }
+    verifyNotDisposed();
 
     log.info('Loading directories...');
 

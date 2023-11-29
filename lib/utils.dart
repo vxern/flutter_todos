@@ -16,4 +16,10 @@ mixin Disposable {
   abstract bool isDisposed;
 
   Future<void> dispose();
+
+  void verifyNotDisposed() {
+    if (isDisposed) {
+      throw StateError('Attempted to perform action while disposed.');
+    }
+  }
 }

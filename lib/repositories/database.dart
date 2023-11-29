@@ -55,15 +55,11 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
 
   /// ! Throws:
   /// - ! [InitialisationException] upon failing to initialise.
-  /// - ! [StateError] if the repository is disposed.
+  /// - ! (propagated) [StateError] if the repository is disposed.
   /// - ! [StateError] if the repository has already been initialised.
   @override
   Future<void> initialise() async {
-    if (isDisposed) {
-      throw StateError(
-        'Attempted to initialise DatabaseRepository when disposed.',
-      );
-    }
+    verifyNotDisposed();
 
     if (initialisationCubit.isInitialised) {
       throw StateError(
