@@ -353,15 +353,34 @@ void main() {
 
     group('dispose()', () {
       test('disposes of the repository.', () async {
+        authentication = AuthenticationRepository(
+          database: database,
+          deriveHashDebug: ({required password}) async => password,
+        );
+
+        final account = MockAccount();
+        stubAccount(account);
+        stubFinder<Account>(database.realm, () => account);
+
+        await expectLater(
+          authentication.login(username: username, password: password),
+          completes,
+        );
         await expectLater(authentication.dispose(), completes);
 
         expect(authentication.isDisposed, isTrue);
+        expect(() => authentication.account, throwsA(isA<TypeError>()));
         expect(authentication.initialisationCubit, isClosed);
       });
 
       test(
         'is idempotent.',
         () async {
+          authentication = AuthenticationRepository(
+            database: database,
+            deriveHashDebug: ({required password}) async => password,
+          );
+
           await expectLater(authentication.dispose(), completes);
           await expectLater(authentication.dispose(), completes);
         },
