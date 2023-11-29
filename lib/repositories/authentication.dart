@@ -41,9 +41,6 @@ Future<String> deriveHash({required String password}) async {
 
 class AuthenticationRepository with Loggable, Disposable {
   @override
-  bool isDisposed = false;
-
-  @override
   final Sprint log;
 
   // * Visible for testing.
@@ -57,7 +54,8 @@ class AuthenticationRepository with Loggable, Disposable {
   // * Visible for testing.
   final Hasher deriveHashDebug;
 
-  /// ! Throws a [StateError] if [AuthenticationRepository] has not been initialised.
+  /// ! Throws a [StateError] if [AuthenticationRepository] has not been
+  /// ! initialised.
   Account get account {
     if (_account == null) {
       throw StateError('Attempted to access account before initialisation.');
@@ -89,7 +87,7 @@ class AuthenticationRepository with Loggable, Disposable {
     required String username,
     required String password,
   }) async {
-    verifyNotDisposed();
+    verifyNotDisposed(message: 'Attempted to log in when disposed.');
 
     if (isAuthenticated) {
       throw const AlreadyLoggedInException();
@@ -133,7 +131,7 @@ class AuthenticationRepository with Loggable, Disposable {
     required String? nickname,
     required String password,
   }) async {
-    verifyNotDisposed();
+    verifyNotDisposed(message: 'Attempted to register when disposed.');
 
     if (_database.realm.find<Account>(username) != null) {
       throw const AccountAlreadyExistsException();
@@ -175,11 +173,10 @@ class AuthenticationRepository with Loggable, Disposable {
 
   @override
   Future<void> dispose() async {
-    isDisposed = true;
+    await super.dispose();
 
     _account = null;
-
-    return initialisationCubit.close();
+    await initialisationCubit.close();
   }
 }
 

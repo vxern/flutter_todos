@@ -32,7 +32,7 @@ class DirectoriesLoader
   /// - ! (propagated) [StateError] if the repository is disposed.
   @override
   Future<Directories> load() async {
-    verifyNotDisposed();
+    verifyNotDisposed(message: 'Attempted to load directories while disposed.');
 
     log.info('Loading directories...');
 

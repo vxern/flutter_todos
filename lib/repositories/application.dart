@@ -12,9 +12,6 @@ import 'package:flutter_todos/repositories/loaders/directories.dart';
 abstract class ApplicationResourceLoader<T, B extends Bloc>
     with Loadable<T>, Loggable, Disposable {
   @override
-  bool isDisposed = false;
-
-  @override
   final Sprint log;
 
   final B bloc;
@@ -23,7 +20,7 @@ abstract class ApplicationResourceLoader<T, B extends Bloc>
 
   @override
   Future<void> dispose() async {
-    isDisposed = true;
+    await super.dispose();
     await bloc.close();
   }
 }
@@ -37,9 +34,6 @@ class DirectoriesLoadException extends _LoadException {
 }
 
 class ApplicationRepository with Initialisable, Disposable {
-  @override
-  bool isDisposed = false;
-
   // * Visible for testing.
   final initialisationCubit = InitialisationCubit();
 
@@ -57,7 +51,9 @@ class ApplicationRepository with Initialisable, Disposable {
   /// - ! [StateError] if the repository has already been initialised.
   @override
   Future<void> initialise() async {
-    verifyNotDisposed();
+    verifyNotDisposed(
+      message: 'Attempted to initialise application repository while disposed.',
+    );
 
     if (initialisationCubit.isInitialised) {
       throw StateError(
@@ -80,10 +76,9 @@ class ApplicationRepository with Initialisable, Disposable {
   }
 
   @override
-  Future<void> dispose() {
-    isDisposed = true;
-
-    return Future.wait([
+  Future<void> dispose() async {
+    await super.dispose();
+    await Future.wait([
       initialisationCubit.close(),
       directories.dispose(),
     ]);

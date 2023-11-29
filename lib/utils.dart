@@ -13,13 +13,16 @@ mixin Loadable<T> {
 }
 
 mixin Disposable {
-  abstract bool isDisposed;
+  bool _isDisposed = false;
 
-  Future<void> dispose();
+  bool get isDisposed => _isDisposed;
 
-  void verifyNotDisposed() {
-    if (isDisposed) {
-      throw StateError('Attempted to perform action while disposed.');
+  Future<void> dispose() async => _isDisposed = true;
+
+  /// ! Throws a [StateError] if disposed.
+  void verifyNotDisposed({required String message}) {
+    if (_isDisposed) {
+      throw StateError(message);
     }
   }
 }

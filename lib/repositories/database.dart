@@ -29,9 +29,6 @@ Realm _defaultRealmOpener({required String path}) => Realm(
 
 class DatabaseRepository with Loggable, Initialisable, Disposable {
   @override
-  bool isDisposed = false;
-
-  @override
   final Sprint log;
 
   // * Visible for testing.
@@ -65,7 +62,9 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
   /// - ! [StateError] if the repository has already been initialised.
   @override
   Future<void> initialise() async {
-    verifyNotDisposed();
+    verifyNotDisposed(
+      message: 'Attempted to initialise database repository while disposed.',
+    );
 
     if (initialisationCubit.isInitialised) {
       throw StateError(
@@ -106,11 +105,10 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
   }
 
   @override
-  Future<void> dispose() {
-    isDisposed = true;
+  Future<void> dispose() async {
+    await super.dispose();
 
     _realm?.close();
-
-    return initialisationCubit.close();
+    await initialisationCubit.close();
   }
 }
