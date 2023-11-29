@@ -1,116 +1,152 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/utils.dart';
 import 'package:realm/realm.dart';
+import 'package:sprint/sprint.dart';
 import 'package:universal_io/io.dart';
 
 import 'package:flutter_todos/constants.dart' as constants;
 import 'package:flutter_todos/repositories/database.dart';
 import 'package:flutter_todos/structs/account.dart';
 
-class AuthenticationRepository {
-  final KdfAlgorithm _argon2;
+typedef Hasher = Future<String> Function({required String password});
 
-  static final int iterations = Platform.numberOfProcessors * 64;
-  static final int parallelism = Platform.numberOfProcessors;
+final _argon2 = Argon2id(
+  parallelism: Platform.numberOfProcessors * 64,
+  memory: constants.hashingMemory,
+  iterations: Platform.numberOfProcessors,
+  hashLength: constants.hashingHashLength,
+);
 
-  final DatabaseRepository _database;
+/// ! Throws a [StateError] on not being able to decode bytes into a string
+/// ! hash.
+Future<String> deriveHash({required String password}) async {
+  final key = await _argon2.deriveKey(
+    secretKey: SecretKey(utf8.encode(password)),
+    nonce: utf8.encode(constants.hashingSaltPhrase),
+  );
 
-  Account? account;
-
-  bool get isAuthenticated => account != null;
-
-  bool get isNotAuthenticated => !isAuthenticated;
-
-  String get username => account!.username;
-
-  AuthenticationRepository._({required DatabaseRepository database})
-      : _argon2 = Argon2id(
-          parallelism: parallelism,
-          memory: constants.hashingMemory,
-          iterations: iterations,
-          hashLength: constants.hashingHashLength,
-        ),
-        _database = database;
-
-  factory AuthenticationRepository.create({
-    required DatabaseRepository database,
-  }) =>
-      AuthenticationRepository._(database: database);
-
-  static RepositoryProvider<AuthenticationRepository> getProvider({
-    required DatabaseRepository database,
-  }) =>
-      RepositoryProvider.value(
-        value: AuthenticationRepository.create(database: database),
-      );
-
-  Future<String> _hash({required String password}) async {
-    final key = await _argon2.deriveKeyFromPassword(
-      nonce: utf8.encode(constants.hashingSaltPhrase),
-      password: password,
-    );
-
-    final String hash;
-    try {
-      hash = utf8.decode(await key.extractBytes(), allowMalformed: true);
-    } on FormatException catch (exception) {
-      throw StateError('Could not decode hash bytes: $exception');
-    }
-
-    return hash;
+  final String hash;
+  try {
+    hash = utf8.decode(await key.extractBytes(), allowMalformed: true);
+  } on FormatException catch (exception) {
+    throw StateError('Could not decode hash bytes: $exception');
   }
 
-  /// ⚠️ Throws:
-  /// - [AlreadyLoggedInException] if has already logged in previously.
-  /// - [AccountNotExistsException] if no account exists with the given
-  ///   username.
-  /// - [WrongPasswordException] if the passwords do not match.
+  return hash;
+}
+
+class AuthenticationRepository with Loggable, Disposable {
+  @override
+  bool isDisposed = false;
+
+  @override
+  final Sprint log;
+
+  // * Visible for testing.
+  final initialisationCubit = InitialisationCubit();
+
+  // This is just a reference, not a managed resource, therefore do not dispose.
+  final DatabaseRepository _database;
+
+  Account? _account;
+
+  // * Visible for testing.
+  final Hasher deriveHashDebug;
+
+  /// ! Throws a [StateError] if [AuthenticationRepository] has not been initialised.
+  Account get account => _account!;
+
+  bool get isNotAuthenticated => _account == null;
+
+  bool get isAuthenticated => _account != null;
+
+  AuthenticationRepository({
+    required DatabaseRepository database,
+    // * Visible for testing.
+    Hasher? deriveHashDebug,
+  })  : log = Sprint('Authentication'),
+        _database = database,
+        deriveHashDebug = deriveHashDebug ?? deriveHash;
+
+  /// ! Throws:
+  /// - ! [AlreadyLoggedInException] if has already logged in previously.
+  /// - ! [AccountNotExistsException] if no account exists with the given
+  ///   ! username.
+  /// - ! [WrongPasswordException] if the passwords do not match.
+  /// - ! (propagated) [StateError] if the repository is disposed.
+  /// - ! (propagated) [StateError] upon failure to hash the password.
   Future<void> login({
     required String username,
     required String password,
   }) async {
+    verifyNotDisposed();
+
     if (isAuthenticated) {
       throw const AlreadyLoggedInException();
     }
 
-    final database = _database.database;
+    initialisationCubit.declareInitialising();
 
-    final account = database.find<Account>(username);
+    final account = _database.realm.find<Account>(username);
     if (account == null) {
+      initialisationCubit.declareFailed();
       throw const AccountNotExistsException();
     }
 
-    final passwordHash = await _hash(password: password);
+    final String passwordHash;
+    try {
+      passwordHash = await deriveHashDebug(password: password);
+    } on StateError catch (error) {
+      log
+        ..severe('Failed to hash password during login.')
+        ..severe(error);
+      rethrow;
+    }
 
     if (passwordHash != account.passwordHash) {
+      initialisationCubit.declareFailed();
       throw const WrongPasswordException();
     }
 
-    this.account = account;
+    _account = account;
+    initialisationCubit.declareInitialised();
   }
 
-  /// ⚠️ Throws an [AccountAlreadyExistsException] if an account with that
-  /// username already exists.
+  /// ! Throws:
+  /// - ! [AccountAlreadyExistsException] if an account with that username
+  ///   ! already exists.
+  /// - ! [FailedToRegisterException] upon failure to register the account.
+  /// - ! (propagated) [StateError] if the repository is disposed.
+  /// - ! (propagated) [StateError] upon failure to hash the password.
   Future<Account> register({
     required String username,
     required String? nickname,
     required String password,
   }) async {
-    final database = _database.database;
+    verifyNotDisposed();
 
-    if (database.find<Account>(username) != null) {
+    if (_database.realm.find<Account>(username) != null) {
       throw const AccountAlreadyExistsException();
     }
 
-    final passwordHash = await _hash(password: password);
+    final String passwordHash;
+    try {
+      passwordHash = await deriveHashDebug(password: password);
+    } on StateError catch (error) {
+      log
+        ..severe('Failed to hash password during login.')
+        ..severe(error);
+      rethrow;
+    }
 
     final Account account;
     try {
-      account = await database.writeAsync(
-        () => database.add<Account>(
+      account = await _database.realm.writeAsync(
+        () => _database.realm.add(
           Account(
             username,
             passwordHash,
@@ -119,25 +155,24 @@ class AuthenticationRepository {
           ),
         ),
       );
-    } on RealmException catch (exception) {
-      throw StateError('Encountered unexpected realm exception: $exception');
+    } on RealmException {
+      throw const FailedToRegisterException();
     }
 
     return account;
   }
 
-  /// ⚠️ Throws an [AlreadyLoggedOutException] if the user has already logged
-  /// out of their account.
   Future<void> logout() async {
-    if (account == null) {
-      throw const AlreadyLoggedOutException();
-    }
-
-    account = null;
+    _account = null;
   }
 
+  @override
   Future<void> dispose() async {
-    account = null;
+    isDisposed = true;
+
+    _account = null;
+
+    return initialisationCubit.close();
   }
 }
 
@@ -164,11 +199,12 @@ class WrongPasswordException extends AuthenticationException {
       : super(message: 'The passwords do not match.');
 }
 
-class AlreadyLoggedOutException extends AuthenticationException {
-  const AlreadyLoggedOutException() : super(message: 'Already logged out.');
-}
-
 class AccountAlreadyExistsException extends AuthenticationException {
   const AccountAlreadyExistsException()
       : super(message: 'An account with that username already exists.');
+}
+
+class FailedToRegisterException extends AuthenticationException {
+  const FailedToRegisterException()
+      : super(message: 'Failed to register the account.');
 }
