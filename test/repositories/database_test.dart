@@ -22,34 +22,29 @@ void main() {
     group('realm', () {
       late DatabaseRepository database;
 
+      setUp(() {
+        database = DatabaseRepository(
+          directory: directory,
+          openRealmDebug: ({required path}) => MockRealm(),
+        );
+      });
       tearDown(() async {
         await database.dispose();
       });
 
       test(
-        'throws [StateError] when accessed before '
-        '[DatabaseRepository.initialise()] called.',
-        () {
-          database = DatabaseRepository(
-            directory: directory,
-            openRealmDebug: ({required path}) => MockRealm(),
-          );
+        'returns [Realm] if [DatabaseRepository] is initialised.',
+        () async {
+          await database.initialise();
 
-          expect(() => database.realm, throwsStateError);
+          expect(() => database.realm, returnsNormally);
         },
       );
 
       test(
-        'returns [Realm] if initialised.',
-        () async {
-          database = DatabaseRepository(
-            directory: directory,
-            openRealmDebug: ({required path}) => MockRealm(),
-          );
-
-          await database.initialise();
-
-          expect(() => database.realm, returnsNormally);
+        'throws [StateError] if [DatabaseRepository] is not initialised.',
+        () {
+          expect(() => database.realm, throwsStateError);
         },
       );
     });
