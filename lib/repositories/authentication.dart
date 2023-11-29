@@ -39,12 +39,9 @@ Future<String> deriveHash({required String password}) async {
   return hash;
 }
 
-class AuthenticationRepository with Loggable, Disposable {
+class AuthenticationRepository with Loggable, Initialisable, Disposable {
   @override
   final Sprint log;
-
-  // * Visible for testing.
-  final initialisationCubit = InitialisationCubit();
 
   // This is just a reference, not a managed resource, therefore do not dispose.
   final DatabaseRepository _database;
@@ -75,6 +72,9 @@ class AuthenticationRepository with Loggable, Disposable {
   })  : log = Sprint('Authentication'),
         _database = database,
         deriveHashDebug = deriveHashDebug ?? deriveHash;
+
+  @override
+  Future<void> initialise() async {}
 
   /// ! Throws:
   /// - ! [AlreadyLoggedInException] if has already logged in previously.

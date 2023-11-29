@@ -31,9 +31,6 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
   @override
   final Sprint log;
 
-  // * Visible for testing.
-  final initialisationCubit = InitialisationCubit();
-
   final Directory directory;
   Realm? _realm;
 

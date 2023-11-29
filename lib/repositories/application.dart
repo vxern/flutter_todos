@@ -25,18 +25,7 @@ abstract class ApplicationResourceLoader<T, B extends Bloc>
   }
 }
 
-class _LoadException implements Exception {
-  const _LoadException();
-}
-
-class DirectoriesLoadException extends _LoadException {
-  const DirectoriesLoadException();
-}
-
 class ApplicationRepository with Initialisable, Disposable {
-  // * Visible for testing.
-  final initialisationCubit = InitialisationCubit();
-
   final DirectoriesLoader directories;
 
   ApplicationRepository({
@@ -83,4 +72,12 @@ class ApplicationRepository with Initialisable, Disposable {
       directories.dispose(),
     ]);
   }
+}
+
+class _LoadException implements Exception {
+  const _LoadException();
+}
+
+class DirectoriesLoadException extends _LoadException {
+  const DirectoriesLoadException();
 }

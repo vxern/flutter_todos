@@ -1,3 +1,4 @@
+import 'package:flutter_todos/cubits.dart';
 import 'package:sprint/sprint.dart';
 
 mixin Loggable {
@@ -5,6 +6,8 @@ mixin Loggable {
 }
 
 mixin Initialisable {
+  final initialisationCubit = InitialisationCubit();
+
   Future<void> initialise();
 }
 
