@@ -52,11 +52,10 @@ class DatabaseRepository with Initialisable, Disposable {
   })  : log = Sprint('Database'),
         openRealm = openRealm ?? _defaultRealmOpener;
 
-  /// ! Throws an [InitialisationException] upon failing to initialise.
-  ///
-  /// ! Throws a [StateError] when:
-  /// - ! the repository is disposed.
-  /// - ! the repository has already been initialised.
+  /// ! Throws:
+  /// - ! [InitialisationException] upon failing to initialise.
+  /// - ! [StateError] if the repository is disposed.
+  /// - ! [StateError] if the repository has already been initialised.
   @override
   Future<void> initialise() async {
     if (isDisposed) {
