@@ -1,3 +1,9 @@
+import 'package:sprint/sprint.dart';
+
+mixin Loggable {
+  abstract final Sprint log;
+}
+
 mixin Initialisable {
   Future<void> initialise();
 }

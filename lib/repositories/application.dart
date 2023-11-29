@@ -10,10 +10,11 @@ import 'package:flutter_todos/repositories/loaders/directories.dart';
 
 // ignore: one_member_abstracts
 abstract class ApplicationResourceLoader<T, B extends Bloc>
-    with Loadable<T>, Disposable {
+    with Loadable<T>, Loggable, Disposable {
   @override
   bool isDisposed = false;
 
+  @override
   final Sprint log;
 
   final B bloc;
@@ -43,8 +44,6 @@ class ApplicationRepository with Initialisable, Disposable {
   final initialisationCubit = InitialisationCubit();
 
   final DirectoriesLoader directories;
-
-  InitialisationState get initialisationState => initialisationCubit.state;
 
   ApplicationRepository({
     // * Visible for testing.

@@ -27,14 +27,15 @@ Realm _defaultRealmOpener({required String path}) => Realm(
       ),
     );
 
-class DatabaseRepository with Initialisable, Disposable {
+class DatabaseRepository with Loggable, Initialisable, Disposable {
   @override
   bool isDisposed = false;
 
+  @override
+  final Sprint log;
+
   // * Visible for testing.
   final initialisationCubit = InitialisationCubit();
-
-  final Sprint log;
 
   final Directory directory;
   Realm? _realm;
