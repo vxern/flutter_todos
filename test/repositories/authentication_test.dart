@@ -64,6 +64,38 @@ void main() {
       () async => Future.wait([database.dispose(), authentication.dispose()]),
     );
 
+    group('account', () {
+      setUp(() {
+        authentication = AuthenticationRepository(
+          database: database,
+          deriveHashDebug: ({required password}) async => password,
+        );
+      });
+
+      test(
+        'returns [Account] if [AuthenticationRepository] is initialised.',
+        () async {
+          final account = MockAccount();
+          stubAccount(account);
+          stubFinder<Account>(database.realm, () => account);
+
+          await expectLater(
+            authentication.login(username: username, password: password),
+            completes,
+          );
+
+          expect(() => authentication.account, returnsNormally);
+        },
+      );
+
+      test(
+        'throws [StateError] if [AuthenticationRepository] is not initialised.',
+        () {
+          expect(() => authentication.account, throwsStateError);
+        },
+      );
+    });
+
     group('login()', () {
       test('logs the user in.', () {
         authentication = AuthenticationRepository(
@@ -368,7 +400,7 @@ void main() {
         );
         await expectLater(authentication.logout(), completes);
 
-        expect(() => authentication.account, throwsA(isA<TypeError>()));
+        expect(() => authentication.account, throwsStateError);
         expect(
           authentication.initialisationCubit.state,
           isA<UninitialisedState>(),
@@ -404,7 +436,7 @@ void main() {
         await expectLater(authentication.dispose(), completes);
 
         expect(authentication.isDisposed, isTrue);
-        expect(() => authentication.account, throwsA(isA<TypeError>()));
+        expect(() => authentication.account, throwsStateError);
         expect(authentication.initialisationCubit, isClosed);
       });
 

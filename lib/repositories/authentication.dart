@@ -58,7 +58,13 @@ class AuthenticationRepository with Loggable, Disposable {
   final Hasher deriveHashDebug;
 
   /// ! Throws a [StateError] if [AuthenticationRepository] has not been initialised.
-  Account get account => _account!;
+  Account get account {
+    if (_account == null) {
+      throw StateError('Attempted to access account before initialisation.');
+    }
+
+    return _account!;
+  }
 
   bool get isNotAuthenticated => _account == null;
 
