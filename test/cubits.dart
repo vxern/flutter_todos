@@ -52,6 +52,19 @@ void main() {
       expect: () => [],
     );
 
+    // Since [UninitialisedState] is the default state and unchanged states are
+    // not emitted, we need to change the state away from and then back towards
+    // [UninitialisedState].
+    blocTest(
+      'emits [InitialisedState(), UninitialisedState()] when'
+      '[declareInitialised(), declareUninitialised()] are called.',
+      build: InitialisationCubit.new,
+      act: (cubit) => cubit
+        ..declareInitialising()
+        ..declareUninitialised(),
+      expect: () => [const InitialisingState(), const UninitialisedState()],
+    );
+
     blocTest(
       'emits [InitialisingState] when [declareInitialising()] is called.',
       build: InitialisationCubit.new,

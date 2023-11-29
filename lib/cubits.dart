@@ -26,6 +26,8 @@ class InitialisationCubit extends Cubit<InitialisationState> {
 
   InitialisationCubit() : super(const UninitialisedState());
 
+  void declareUninitialised() => emit(const UninitialisedState());
+
   void declareInitialising() => emit(const InitialisingState());
 
   void declareInitialised() => emit(const InitialisedState());
