@@ -194,7 +194,7 @@ void main() {
 
           expect(
             authentication.login(username: username, password: password),
-            throwsA(isA<StateError>()),
+            throwsStateError,
           );
         },
       );
@@ -213,7 +213,7 @@ void main() {
 
         expect(
           authentication.login(username: username, password: password),
-          throwsA(isA<StateError>()),
+          throwsStateError,
         );
       });
 
@@ -357,7 +357,7 @@ void main() {
               nickname: null,
               password: password,
             ),
-            throwsA(isA<StateError>()),
+            throwsStateError,
           );
         },
       );
@@ -378,7 +378,7 @@ void main() {
             nickname: null,
             password: password,
           ),
-          throwsA(isA<StateError>()),
+          throwsStateError,
         );
       });
     });

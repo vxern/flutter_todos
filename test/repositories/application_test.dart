@@ -54,7 +54,7 @@ void main() {
         stubLoaderWithSuccess(application.directories);
 
         await expectLater(application.initialise(), completes);
-        await expectLater(application.initialise, throwsA(isA<StateError>()));
+        await expectLater(application.initialise, throwsStateError);
       });
 
       test(
@@ -63,7 +63,7 @@ void main() {
           stubLoaderWithSuccess(application.directories);
 
           await expectLater(application.dispose(), completes);
-          await expectLater(application.initialise, throwsA(isA<StateError>()));
+          await expectLater(application.initialise, throwsStateError);
         },
       );
 

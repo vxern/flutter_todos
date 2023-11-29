@@ -77,7 +77,7 @@ void main() {
         );
 
         await expectLater(database.initialise(), completes);
-        await expectLater(database.initialise, throwsA(isA<StateError>()));
+        await expectLater(database.initialise, throwsStateError);
       });
 
       test(
@@ -93,7 +93,7 @@ void main() {
           stub(database.realm);
 
           await expectLater(database.dispose(), completes);
-          await expectLater(database.initialise, throwsA(isA<StateError>()));
+          await expectLater(database.initialise, throwsStateError);
         },
       );
 

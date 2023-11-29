@@ -41,7 +41,7 @@ void main() {
           );
 
           await expectLater(loader.dispose(), completes);
-          await expectLater(loader.load, throwsA(isA<StateError>()));
+          await expectLater(loader.load, throwsStateError);
         },
       );
 
