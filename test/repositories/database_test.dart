@@ -34,7 +34,7 @@ void main() {
       test('initialises the repository.', () async {
         database = DatabaseRepository(
           directory: directory,
-          openRealm: ({required path}) => MockRealm(),
+          openRealmDebug: ({required path}) => MockRealm(),
         );
 
         expect(database.initialise(), completes);
@@ -43,7 +43,7 @@ void main() {
       test('throws a [StateError] when already initialised.', () async {
         database = DatabaseRepository(
           directory: directory,
-          openRealm: ({required path}) => MockRealm(),
+          openRealmDebug: ({required path}) => MockRealm(),
         );
 
         await expectLater(database.initialise(), completes);
@@ -55,7 +55,7 @@ void main() {
         () async {
           database = DatabaseRepository(
             directory: directory,
-            openRealm: ({required path}) => MockRealm(),
+            openRealmDebug: ({required path}) => MockRealm(),
           );
 
           await expectLater(database.initialise(), completes);
@@ -73,7 +73,7 @@ void main() {
           test('due to a [FileSystemException].', () async {
             database = DatabaseRepository(
               directory: directory,
-              openRealm: ({required path}) {
+              openRealmDebug: ({required path}) {
                 throw const FileSystemException();
               },
             );
@@ -87,7 +87,7 @@ void main() {
           test('due to a [RealmException].', () async {
             database = DatabaseRepository(
               directory: directory,
-              openRealm: ({required path}) {
+              openRealmDebug: ({required path}) {
                 throw RealmException('');
               },
             );
@@ -107,7 +107,7 @@ void main() {
 
           database = DatabaseRepository(
             directory: directory,
-            openRealm: ({required path}) => openRealm(path: path),
+            openRealmDebug: ({required path}) => openRealm(path: path),
           );
 
           openRealm = ({required path}) {
@@ -130,7 +130,7 @@ void main() {
 
         database = DatabaseRepository(
           directory: directory,
-          openRealm: ({required path}) => openRealm(path: path),
+          openRealmDebug: ({required path}) => openRealm(path: path),
         );
 
         unawaited(
@@ -167,7 +167,7 @@ void main() {
         () async {
           database = DatabaseRepository(
             directory: directory,
-            openRealm: ({required path}) => MockRealm(),
+            openRealmDebug: ({required path}) => MockRealm(),
           );
 
           await database.initialise();

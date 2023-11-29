@@ -43,14 +43,14 @@ class DatabaseRepository with Initialisable, Disposable {
   Realm get realm => _realm!;
 
   // * Visible for testing.
-  final RealmOpener openRealm;
+  final RealmOpener openRealmDebug;
 
   DatabaseRepository({
     required this.directory,
     // * Visible for testing.
-    RealmOpener? openRealm,
+    RealmOpener? openRealmDebug,
   })  : log = Sprint('Database'),
-        openRealm = openRealm ?? _defaultRealmOpener;
+        openRealmDebug = openRealmDebug ?? _defaultRealmOpener;
 
   /// ! Throws:
   /// - ! [InitialisationException] upon failing to initialise.
@@ -78,7 +78,7 @@ class DatabaseRepository with Initialisable, Disposable {
 
     if (_realm == null) {
       try {
-        _realm = openRealm(path: directory.path);
+        _realm = openRealmDebug(path: directory.path);
       } on FileSystemException catch (exception) {
         initialisationCubit.declareFailed();
 
