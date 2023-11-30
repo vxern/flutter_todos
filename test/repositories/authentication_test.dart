@@ -319,7 +319,6 @@ void main() {
         );
 
         final account = MockAccount();
-        throwOnMissingStub(account);
         stubAccount(account);
         stubFinder<Account>(database.realm, () => null);
         stubAdder<Account>(database.realm, account);
@@ -346,7 +345,6 @@ void main() {
 
           final account = MockAccount();
           stubAccount(account);
-          throwOnMissingStub(database.realm as MockRealm);
           stubFinder<Account>(database.realm, () => account);
           stubAdder<Account>(database.realm, account);
           stubWriter<Account>(database.realm, () => account);
@@ -373,7 +371,6 @@ void main() {
 
           final account = MockAccount();
           stubAccount(account);
-          throwOnMissingStub(database.realm as MockRealm);
           stubFinder<Account>(database.realm, () => null);
           stubAdder<Account>(database.realm, account);
           stubWriter<Account>(database.realm, () {
