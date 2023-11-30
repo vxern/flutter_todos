@@ -73,7 +73,7 @@ void main() {
       });
 
       test(
-        'returns [Account] if [AuthenticationRepository] is initialised.',
+        'returns [Account] if authenticated.',
         () async {
           final account = MockAccount();
           stubAccount(account);
@@ -89,11 +89,63 @@ void main() {
       );
 
       test(
-        'throws [StateError] if [AuthenticationRepository] is not initialised.',
+        'throws [StateError] if not authenticated.',
         () {
           expect(() => authentication.account, throwsStateError);
         },
       );
+    });
+
+    group('isAuthenticated', () {
+      setUp(() {
+        authentication = AuthenticationRepository(
+          database: database,
+          deriveHashDebug: ({required password}) async => password,
+        );
+      });
+
+      test('returns [true] if authenticated.', () async {
+        final account = MockAccount();
+        stubAccount(account);
+        stubFinder<Account>(database.realm, () => account);
+
+        await expectLater(
+          authentication.login(username: username, password: password),
+          completes,
+        );
+
+        expect(authentication.isAuthenticated, isTrue);
+      });
+
+      test('returns [false] if not authenticated.', () {
+        expect(authentication.isAuthenticated, isFalse);
+      });
+    });
+
+    group('isNotAuthenticated', () {
+      setUp(() {
+        authentication = AuthenticationRepository(
+          database: database,
+          deriveHashDebug: ({required password}) async => password,
+        );
+      });
+
+      test('returns [true] if not authenticated.', () {
+        expect(authentication.isNotAuthenticated, isTrue);
+      });
+
+      test('returns [false] if authenticated.', () async {
+        final account = MockAccount();
+        stubAccount(account);
+        stubFinder<Account>(database.realm, () => account);
+
+        await expectLater(
+          authentication.login(username: username, password: password),
+          completes,
+        );
+
+        expect(authentication.isNotAuthenticated, isFalse);
+      });
     });
 
     group('login()', () {

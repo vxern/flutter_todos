@@ -35,7 +35,7 @@ void main() {
       test(
         'returns [Realm] if [DatabaseRepository] is initialised.',
         () async {
-          await database.initialise();
+          await expectLater(database.initialise(), completes);
 
           expect(() => database.realm, returnsNormally);
         },

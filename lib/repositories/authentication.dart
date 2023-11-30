@@ -59,9 +59,9 @@ class AuthenticationRepository extends Repository {
     return _account!;
   }
 
-  bool get isNotAuthenticated => _account == null;
-
   bool get isAuthenticated => _account != null;
+
+  bool get isNotAuthenticated => _account == null;
 
   AuthenticationRepository({
     required DatabaseRepository database,
