@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 import 'package:flutter_todos/utils.dart';
 import 'package:realm/realm.dart';
 import 'package:sprint/sprint.dart';
@@ -27,10 +28,7 @@ Realm _defaultRealmOpener({required String path}) => Realm(
       ),
     );
 
-class DatabaseRepository with Loggable, Initialisable, Disposable {
-  @override
-  final Sprint log;
-
+class DatabaseRepository extends Repository {
   final Directory directory;
   Realm? _realm;
 
@@ -50,24 +48,17 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
     required this.directory,
     // * Visible for testing.
     RealmOpener? openRealmDebug,
-  })  : log = Sprint('Database'),
-        openRealmDebug = openRealmDebug ?? _defaultRealmOpener;
+  })  : openRealmDebug = openRealmDebug ?? _defaultRealmOpener,
+        super(name: 'DatabaseRepository');
 
   /// ! Throws:
   /// - ! [InitialisationException] upon failing to initialise.
   /// - ! (propagated) [StateError] if the repository is disposed.
-  /// - ! [StateError] if the repository has already been initialised.
+  /// - ! (propagated) [StateError] if the repository has already been
+  ///   ! initialised.
   @override
   Future<void> initialise() async {
-    verifyNotDisposed(
-      message: 'Attempted to initialise database repository while disposed.',
-    );
-
-    if (initialisationCubit.isInitialised) {
-      throw StateError(
-        'Attempted to initialise DatabaseRepository when already initialised.',
-      );
-    }
+    await super.initialise();
 
     initialisationCubit.declareInitialising();
     log.info('Opening database...');
@@ -106,6 +97,5 @@ class DatabaseRepository with Loggable, Initialisable, Disposable {
     await super.dispose();
 
     _realm?.close();
-    await initialisationCubit.close();
   }
 }

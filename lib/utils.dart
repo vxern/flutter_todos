@@ -9,6 +9,9 @@ mixin Initialisable {
   final initialisationCubit = InitialisationCubit();
 
   Future<void> initialise();
+
+  Future<void> uninitialise() async =>
+      initialisationCubit.declareUninitialised();
 }
 
 mixin Loadable<T> {

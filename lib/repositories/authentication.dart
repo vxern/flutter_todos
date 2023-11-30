@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 import 'package:flutter_todos/utils.dart';
 import 'package:realm/realm.dart';
 import 'package:sprint/sprint.dart';
@@ -39,10 +40,7 @@ Future<String> deriveHash({required String password}) async {
   return hash;
 }
 
-class AuthenticationRepository with Loggable, Initialisable, Disposable {
-  @override
-  final Sprint log;
-
+class AuthenticationRepository extends Repository {
   // This is just a reference, not a managed resource, therefore do not dispose.
   final DatabaseRepository _database;
 
@@ -69,12 +67,9 @@ class AuthenticationRepository with Loggable, Initialisable, Disposable {
     required DatabaseRepository database,
     // * Visible for testing.
     Hasher? deriveHashDebug,
-  })  : log = Sprint('Authentication'),
-        _database = database,
-        deriveHashDebug = deriveHashDebug ?? deriveHash;
-
-  @override
-  Future<void> initialise() async {}
+  })  : _database = database,
+        deriveHashDebug = deriveHashDebug ?? deriveHash,
+        super(name: 'AuthenticationRepository', allowMultipleInitialise: true);
 
   /// ! Throws:
   /// - ! [AlreadyLoggedInException] if has already logged in previously.
@@ -87,7 +82,7 @@ class AuthenticationRepository with Loggable, Initialisable, Disposable {
     required String username,
     required String password,
   }) async {
-    verifyNotDisposed(message: 'Attempted to log in when disposed.');
+    await initialise();
 
     if (isAuthenticated) {
       throw const AlreadyLoggedInException();
@@ -167,16 +162,14 @@ class AuthenticationRepository with Loggable, Initialisable, Disposable {
   }
 
   Future<void> logout() async {
+    await uninitialise();
     _account = null;
-    initialisationCubit.declareUninitialised();
   }
 
   @override
   Future<void> dispose() async {
     await super.dispose();
-
     _account = null;
-    await initialisationCubit.close();
   }
 }
 
