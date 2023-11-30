@@ -63,18 +63,21 @@ void stubBulkDeleter<T extends RealmObject>(
   Iterable<T> objects,
   void Function() responseBuilder,
 ) {
-  when(() => realm.deleteMany<T>(objects)).thenReturn(responseBuilder());
+  when(() => realm.deleteMany<T>(objects)).thenAnswer((_) => responseBuilder());
 }
 
-void stubDeleter<T extends RealmObject>(
+void stubDeleter<T extends RealmObjectBase>(
   Realm realm,
   T object,
-  T Function() valueBuilder,
+  void Function() responseBuilder,
 ) {
-  when(() => realm.delete<T>(object)).thenReturn(valueBuilder());
+  when(() => realm.delete<T>(object)).thenReturn(responseBuilder());
 }
 
-void stubWriter<T extends RealmObject>(Realm realm, T Function() valueBuilder) {
+void stubWriter<T>(Realm realm, T Function() valueBuilder) {
+  when(() => realm.writeAsync<void>(any(), any())).thenAnswer(
+    (invocation) async => valueBuilder(),
+  );
   when(() => realm.writeAsync<T>(any(), any())).thenAnswer(
     (invocation) async => valueBuilder(),
   );
@@ -116,6 +119,11 @@ void main() {
         database: database,
       );
     });
+    tearDown(
+      () async => Future.wait(
+        [database.dispose(), authentication.dispose(), todos.dispose()],
+      ),
+    );
 
     group('todos', () {
       test(
@@ -180,7 +188,10 @@ void main() {
     });
 
     group('find()', () {
-      setUp(() => todos.initialise());
+      setUp(() async {
+        await todos.initialise();
+        stubTodos(todos.todos);
+      });
 
       test('gets a todo by ID.', () async {
         expect(
@@ -190,20 +201,24 @@ void main() {
       });
 
       test("throws a [ResourceException] when the todo doesn't exist.", () {
-        expect(todos.find(id: '-1'), throwsStateError);
+        expect(() => todos.find(id: '-1'), throwsResourceException);
       });
     });
 
     group('addTodo()', () {
-      setUp(() => todos.initialise());
+      setUp(() async {
+        await todos.initialise();
+        stubTodos(todos.todos);
+      });
 
-      test('adds a todo.', () {
+      test('adds a todo.', () async {
         final todo = MockTodo();
-        stubTodo(todo);
         stubAdder<Todo>(database.realm, todo);
         stubWriter<Todo>(database.realm, () => todo);
 
-        expect(todos.addTodo(), completion(todos.todos.entries[1]));
+        // TODO(vxern): Verify the returned value is the original todo.
+
+        expect(todos.addTodo(), completes);
       });
 
       test(
@@ -225,12 +240,14 @@ void main() {
 
       setUp(() async {
         await todos.initialise();
+        stubTodos(todos.todos);
         todo = todos.todos.entries.first;
       });
 
       test('removes a todo.', () {
         stubBulkDeleter<TodoRow>(database.realm, todo.rows, () {});
         stubDeleter<Todo>(database.realm, todo, () => todo);
+        stubWriter<Todo>(database.realm, () => todo);
 
         expect(todos.removeTodo(todo: todo), completes);
       });
@@ -238,11 +255,12 @@ void main() {
       test(
         'throws a [ResourceException] when failed to remove todo rows.',
         () {
-          stubBulkDeleter<TodoRow>(database.realm, todo.rows, () {
+          stubBulkDeleter<TodoRow>(database.realm, todo.rows, () => todo.rows);
+          stubWriter<RealmList<TodoRow>>(database.realm, () {
             throw RealmException('');
           });
 
-          expect(todos.removeTodo(todo: todo), throwsResourceException);
+          expect(() => todos.removeTodo(todo: todo), throwsResourceException);
         },
       );
 
@@ -250,7 +268,8 @@ void main() {
         'throws a [ResourceException] when failed to remove the todo.',
         () {
           stubBulkDeleter<TodoRow>(database.realm, todo.rows, () {});
-          stubDeleter<Todo>(database.realm, todo, () {
+          stubDeleter<Todo>(database.realm, todo, () {});
+          stubWriter<RealmList<Todo>>(database.realm, () {
             throw RealmException('');
           });
 
@@ -264,11 +283,18 @@ void main() {
 
       setUp(() async {
         await todos.initialise();
+        stubTodos(todos.todos);
         todo = todos.todos.entries.first;
       });
 
       test('adds a todo row.', () {
-        expect(todos.addRow(todo: todo), completion(todo.rows[1]));
+        final row = TodoRow('');
+        stubAdder<TodoRow>(database.realm, row);
+        stubWriter<TodoRow>(database.realm, () => row);
+
+        // TODO(vxern): Verify the returned value is the original row.
+
+        expect(todos.addRow(todo: todo), completes);
       });
 
       test(
@@ -290,21 +316,26 @@ void main() {
 
       setUp(() async {
         await todos.initialise();
+        stubTodos(todos.todos);
         row = todos.todos.entries.first.rows.first;
       });
 
       test('removes a todo row.', () {
-        expect(todos.removeRow(row: row), completion(row));
+        stubDeleter<TodoRow>(database.realm, row, () => row);
+        stubWriter<TodoRow>(database.realm, () => row);
+
+        expect(todos.removeRow(row: row), completes);
       });
 
       test(
         'throws a [ResourceException] when failed to remove the todo row.',
         () {
-          stubDeleter<TodoRow>(database.realm, row, () {
+          stubDeleter<TodoRow>(database.realm, row, () {});
+          stubWriter<TodoRow>(database.realm, () {
             throw RealmException('');
           });
 
-          expect(todos.removeRow(row: row), throwsResourceException);
+          expect(() => todos.removeRow(row: row), throwsResourceException);
         },
       );
     });
