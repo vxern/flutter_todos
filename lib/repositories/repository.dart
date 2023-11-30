@@ -22,7 +22,7 @@ abstract class Repository with Loggable, Initialisable, Disposable {
       message: 'Attempted to initialise $name while disposed.',
     );
 
-    if (!allowMultipleInitialise && initialisationCubit.isInitialised) {
+    if (initialisationCubit.isInitialised && !allowMultipleInitialise) {
       throw StateError(
         'Attempted to initialise $name when already initialised.',
       );
