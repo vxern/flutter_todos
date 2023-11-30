@@ -176,10 +176,7 @@ void main() {
 
         await authentication.logout();
 
-        await expectLater(
-          todos.initialise(),
-          throwsA(isA<InitialisationException>()),
-        );
+        await expectLater(todos.initialise(), throwsInitialisationException);
 
         await authentication.login(username: username, password: password);
 

@@ -108,10 +108,7 @@ void main() {
               },
             );
 
-            expect(
-              database.initialise,
-              throwsA(isA<InitialisationException>()),
-            );
+            expect(database.initialise, throwsInitialisationException);
           });
 
           test('due to a [RealmException].', () async {
@@ -122,10 +119,7 @@ void main() {
               },
             );
 
-            expect(
-              database.initialise,
-              throwsA(isA<InitialisationException>()),
-            );
+            expect(database.initialise, throwsInitialisationException);
           });
         },
       );
@@ -144,10 +138,7 @@ void main() {
             throw const FileSystemException();
           };
 
-          await expectLater(
-            database.initialise,
-            throwsA(isA<InitialisationException>()),
-          );
+          await expectLater(database.initialise, throwsInitialisationException);
 
           openRealm = ({required path}) => MockRealm();
 
@@ -179,10 +170,7 @@ void main() {
           throw const FileSystemException();
         };
 
-        await expectLater(
-          database.initialise,
-          throwsA(isA<InitialisationException>()),
-        );
+        await expectLater(database.initialise, throwsInitialisationException);
 
         openRealm = ({required path}) => MockRealm();
 

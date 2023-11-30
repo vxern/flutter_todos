@@ -72,10 +72,7 @@ void main() {
         () async {
           stubLoaderWithFailure(application.directories);
 
-          expect(
-            application.initialise,
-            throwsA(isA<InitialisationException>()),
-          );
+          expect(application.initialise, throwsInitialisationException);
         },
       );
 
@@ -86,7 +83,7 @@ void main() {
 
           await expectLater(
             application.initialise,
-            throwsA(isA<InitialisationException>()),
+            throwsInitialisationException,
           );
 
           stubLoaderWithSuccess(application.directories);
@@ -112,7 +109,7 @@ void main() {
 
         await expectLater(
           application.initialise,
-          throwsA(isA<InitialisationException>()),
+          throwsInitialisationException,
         );
 
         stubLoaderWithSuccess(application.directories);
