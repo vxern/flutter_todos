@@ -118,7 +118,7 @@ class AuthenticationRepository extends Repository {
   /// ! Throws:
   /// - ! [AccountAlreadyExistsException] if an account with that username
   ///   ! already exists.
-  /// - ! [FailedToRegisterException] upon failure to register the account.
+  /// - ! [ResourceException] upon failure to register the account.
   /// - ! (propagated) [StateError] if the repository is disposed.
   /// - ! (propagated) [StateError] upon failure to hash the password.
   Future<Account> register({
@@ -154,8 +154,9 @@ class AuthenticationRepository extends Repository {
           ),
         ),
       );
-    } on RealmException {
-      throw const FailedToRegisterException();
+    } on RealmException catch (exception) {
+      log.severe(exception);
+      throw const ResourceException(message: 'Failed to save account.');
     }
 
     return account;
@@ -199,9 +200,4 @@ class WrongPasswordException extends AuthenticationException {
 class AccountAlreadyExistsException extends AuthenticationException {
   const AccountAlreadyExistsException()
       : super(message: 'An account with that username already exists.');
-}
-
-class FailedToRegisterException extends AuthenticationException {
-  const FailedToRegisterException()
-      : super(message: 'Failed to register the account.');
 }

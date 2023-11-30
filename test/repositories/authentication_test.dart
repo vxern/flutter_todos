@@ -334,7 +334,7 @@ void main() {
               nickname: null,
               password: password,
             ),
-            throwsA(isA<FailedToRegisterException>()),
+            throwsResourceException,
           );
         },
       );

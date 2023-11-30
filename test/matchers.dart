@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 
 class HasState<T> extends Matcher {
   const HasState();
@@ -25,3 +26,5 @@ class IsClosed extends Matcher {
 }
 
 const isClosed = IsClosed();
+
+final throwsResourceException = throwsA(isA<ResourceException>());

@@ -35,3 +35,9 @@ abstract class Repository with Loggable, Initialisable, Disposable {
     await initialisationCubit.close();
   }
 }
+
+class ResourceException implements Exception {
+  final String message;
+
+  const ResourceException({required this.message});
+}
