@@ -69,20 +69,22 @@ class FlutterTodos extends StatelessWidget {
                       directory: state.directories.documents,
                     ),
                     child: Builder(
-                      builder: (context) => MultiRepositoryProvider(
-                        providers: [
-                          RepositoryProvider.value(
-                            value: AuthenticationRepository(
-                              database: context.read<DatabaseRepository>(),
-                            ),
-                          ),
-                          RepositoryProvider.value(
+                      builder: (context) => RepositoryProvider.value(
+                        value: AuthenticationRepository(
+                          database: context.read<DatabaseRepository>(),
+                        ),
+                        child: Builder(
+                          builder: (context) => RepositoryProvider.value(
                             value: TodoRepository(
+                              authentication:
+                                  context.read<AuthenticationRepository>(),
                               database: context.read<DatabaseRepository>(),
                             ),
+                            child: Builder(
+                              builder: (context) => base(context, state),
+                            ),
                           ),
-                        ],
-                        child: base(context, state),
+                        ),
                       ),
                     ),
                   );

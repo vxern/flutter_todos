@@ -1,113 +1,134 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/repositories/repository.dart';
+import 'package:flutter_todos/utils.dart';
 import 'package:realm/realm.dart';
 
 import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/repositories/database.dart';
 import 'package:flutter_todos/structs/account.dart';
+import 'package:sprint/src/sprint.dart';
 
-class TodoRepository {
+class TodoRepository extends Repository {
+  final AuthenticationRepository _authentication;
   final DatabaseRepository _database;
 
-  TodoRepository({required DatabaseRepository database}) : _database = database;
+  Todos? _todos;
 
-  Todo getById({required Todos todos, required String id}) {
+  /// ! Throws a [StateError] if [TodoRepository] has not been initialised.
+  Todos get todos {
+    if (_todos == null) {
+      throw StateError('Attempted to access todos before initialisation.');
+    }
+
+    return _todos!;
+  }
+
+  TodoRepository({
+    required AuthenticationRepository authentication,
+    required DatabaseRepository database,
+  })  : _authentication = authentication,
+        _database = database,
+        super(name: 'TodoRepository');
+
+  /// ! Throws:
+  /// - ! [InitialisationException] upon failing to initialise.
+  /// - ! (propagated) [StateError] if the repository is disposed.
+  /// - ! (propagated) [StateError] if the repository has already been
+  ///   ! initialised.
+  @override
+  Future<void> initialise() async {
+    await super.initialise();
+
+    initialisationCubit.declareInitialising();
+
+    try {
+      _todos = _authentication.account.todos;
+    } on StateError catch (exception) {
+      log.severe(exception);
+      initialisationCubit.declareFailed();
+      throw const InitialisationException();
+    }
+
+    initialisationCubit.declareInitialised();
+  }
+
+  // TODO(vxern): Add ID validation?
+
+  /// ! Throws [ResourceException] if a to-do with the given ID does not exist.
+  Todo find({required String id}) {
     final Todo todo;
     try {
       todo = todos.entries.firstWhere((todo) => todo.id.toString() == id);
     } on StateError {
-      throw StateError(
-        'Could not find todo with the ID $id. Has it been deleted already?',
+      throw ResourceException(
+        message:
+            'Could not find todo with the ID $id. Has it been deleted already?',
       );
     }
 
     return todo;
   }
 
-  Future<Todo> addTodo({
-    required AuthenticationRepository authentication,
-  }) async {
-    if (authentication.isNotAuthenticated) {
-      throw StateError('Attempted to create todo while unauthenticated.');
-    }
-
-    final database = _database.realm;
-
+  /// ! Throws [ResourceException] if failed to add todo.
+  Future<Todo> addTodo() async {
     final todo = Todo(Uuid.v4(), 'Draft', DateTime.now());
 
     try {
-      await database.writeAsync(
-        () {
-          if (authentication.account!.todos == null) {
-            authentication.account!.todos = Todos();
-          }
-
-          authentication.account!.todos!.entries.add(todo);
-        },
-      );
+      await _database.realm.writeAsync(() => todos.entries.add(todo));
     } on RealmException catch (exception) {
-      throw StateError('Encountered unexpected realm exception: $exception');
+      log.severe(exception);
+      throw const ResourceException(message: 'Failed to add todo.');
     }
 
     return todo;
   }
 
-  Future<void> removeTodo({
-    required AuthenticationRepository authentication,
-    required Todo todo,
-  }) async {
-    if (authentication.isNotAuthenticated) {
-      throw StateError('Attempted to remove todo while unauthenticated.');
+  /// ! Throws [ResourceException] if failed to remove todo.
+  Future<void> removeTodo({required Todo todo}) async {
+    try {
+      await _database.realm.writeAsync(
+        () => _database.realm.deleteMany(todo.rows),
+      );
+    } on RealmException catch (exception) {
+      log.severe(exception);
+      throw const ResourceException(message: 'Failed to remove todo rows.');
     }
 
-    final database = _database.realm;
-
     try {
-      await database.writeAsync(() => database.deleteMany(todo.rows));
-      await database.writeAsync(() => database.delete(todo));
+      await _database.realm.writeAsync(() => _database.realm.delete(todo));
     } on RealmException catch (exception) {
-      throw StateError('Encountered unexpected realm exception: $exception');
+      log.severe(exception);
+      throw const ResourceException(message: 'Failed to remove todo.');
     }
   }
 
-  Future<TodoRow> addRow({
-    required AuthenticationRepository authentication,
-    required Todo todo,
-  }) async {
-    if (authentication.isNotAuthenticated) {
-      throw StateError('Attempted to add todo row while unauthenticated.');
-    }
-
-    final database = _database.realm;
-
+  /// ! Throws [ResourceException] if failed to add todo row.
+  Future<TodoRow> addRow({required Todo todo}) async {
     final row = TodoRow('');
 
     try {
-      await database.writeAsync(() => todo.rows.add(row));
+      await _database.realm.writeAsync(() => todo.rows.add(row));
     } on RealmException catch (exception) {
-      throw StateError('Encountered unexpected realm exception: $exception');
+      log.severe(exception);
+      throw const ResourceException(message: 'Failed to add todo row.');
     }
 
     return row;
   }
 
-  Future<void> removeRow({
-    required AuthenticationRepository authentication,
-    required TodoRow row,
-  }) async {
-    if (authentication.isNotAuthenticated) {
-      throw StateError('Attempted to remove todo row while unauthenticated.');
-    }
-
-    final database = _database.realm;
-
+  /// ! Throws [ResourceException] if failed to remove todo row.
+  Future<void> removeRow({required TodoRow row}) async {
     try {
-      await database.writeAsync(
-        () => database.delete<TodoRow>(row),
-      );
+      await _database.realm.writeAsync(() => _database.realm.delete(row));
     } on RealmException catch (exception) {
-      throw StateError('Encountered unexpected realm exception: $exception');
+      log.severe(exception);
+      throw const ResourceException(message: 'Failed to remove todo row.');
     }
   }
 
-  Future<void> dispose() async {}
+  @override
+  Future<void> dispose() async {
+    await super.dispose();
+    _todos = null;
+  }
 }

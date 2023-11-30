@@ -83,16 +83,9 @@ class TodosPage extends StatelessWidget {
                                     Theme.of(context).listTileTheme.iconColor,
                               ),
                               onTap: () {
-                                final authentication =
-                                    context.read<AuthenticationRepository>();
                                 final todos = context.read<TodoRepository>();
 
-                                unawaited(
-                                  todos.removeTodo(
-                                    authentication: authentication,
-                                    todo: todo,
-                                  ),
-                                );
+                                unawaited(todos.removeTodo(todo: todo));
                               },
                             ),
                             title: TextField(
@@ -154,13 +147,11 @@ class TodosPage extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        final authentication =
-                            context.read<AuthenticationRepository>();
                         final todos = context.read<TodoRepository>();
 
                         unawaited(
                           todos
-                              .addTodo(authentication: authentication)
+                              .addTodo()
                               .then((todo) => context.go('/todo/${todo.id}')),
                         );
                       },

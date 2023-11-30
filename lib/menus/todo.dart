@@ -87,16 +87,9 @@ class _TodoPageState extends State<TodoPage> {
                               color: Theme.of(context).listTileTheme.iconColor,
                             ),
                             onTap: () {
-                              final authentication =
-                                  context.read<AuthenticationRepository>();
                               final todos = context.read<TodoRepository>();
 
-                              unawaited(
-                                todos.removeRow(
-                                  authentication: authentication,
-                                  row: row,
-                                ),
-                              );
+                              unawaited(todos.removeRow(row: row));
                             },
                           ),
                           title: TextField(
@@ -155,16 +148,9 @@ class _TodoPageState extends State<TodoPage> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        final authentication =
-                            context.read<AuthenticationRepository>();
                         final todos = context.read<TodoRepository>();
 
-                        unawaited(
-                          todos.addRow(
-                            authentication: authentication,
-                            todo: widget._todo,
-                          ),
-                        );
+                        unawaited(todos.addRow(todo: widget._todo));
                       },
                       child: const Text('Add Item'),
                     ),

@@ -53,10 +53,7 @@ final router = GoRouter(
           );
         }
 
-        final todo = todos.getById(
-          todos: authentication.account!.todos!,
-          id: id,
-        );
+        final todo = todos.find(id: id);
 
         return TodoPage(todo: todo);
       },
