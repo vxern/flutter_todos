@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/repository.dart';
@@ -17,17 +18,6 @@ final _schemas = List<SchemaObject>.unmodifiable([
   TodoRow.schema,
 ]);
 
-typedef RealmOpener = Realm Function({required String path});
-
-Realm _defaultRealmOpener({required String path}) => Realm(
-      Configuration.local(
-        _schemas,
-        path: path,
-        // TODO(vxern): ONLY IN DEBUG.
-        shouldDeleteIfMigrationNeeded: true,
-      ),
-    );
-
 class DatabaseRepository extends Repository {
   final Directory directory;
   Realm? _realm;
@@ -41,15 +31,18 @@ class DatabaseRepository extends Repository {
     return _realm!;
   }
 
-  // * Visible for testing.
-  final RealmOpener openRealmDebug;
-
   DatabaseRepository({
     required this.directory,
-    // * Visible for testing.
-    RealmOpener? openRealmDebug,
-  })  : openRealmDebug = openRealmDebug ?? _defaultRealmOpener,
-        super(name: 'DatabaseRepository');
+  }) : super(name: 'DatabaseRepository');
+
+  // * Visible for testing.
+  Realm openRealm({required String path}) => Realm(
+        Configuration.local(
+          _schemas,
+          path: path,
+          shouldDeleteIfMigrationNeeded: kDebugMode,
+        ),
+      );
 
   /// ! Throws:
   /// - ! [InitialisationException] upon failing to initialise.
@@ -68,7 +61,7 @@ class DatabaseRepository extends Repository {
 
     if (_realm == null) {
       try {
-        _realm = openRealmDebug(path: directory.path);
+        _realm = openRealm(path: directory.path);
       } on FileSystemException catch (exception) {
         initialisationCubit.declareFailed();
 

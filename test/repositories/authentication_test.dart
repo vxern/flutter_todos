@@ -15,6 +15,34 @@ class MockRealm extends Mock implements Realm {}
 
 class MockAccount extends Mock implements Account {}
 
+class TestAuthenticationRepository extends AuthenticationRepository {
+  TestAuthenticationRepository({required super.database});
+
+  @override
+  Future<String> deriveHash({required String password}) async => password;
+}
+
+class FaultyTestAuthenticationRepository extends AuthenticationRepository {
+  final Never Function() thrower;
+
+  FaultyTestAuthenticationRepository({
+    required super.database,
+    required this.thrower,
+  });
+
+  @override
+  Future<String> deriveHash({required String password}) async {
+    thrower();
+  }
+}
+
+class TestDatabaseRepository extends DatabaseRepository {
+  TestDatabaseRepository({required super.directory});
+
+  @override
+  Realm openRealm({required String path}) => MockRealm();
+}
+
 void stubRealm(Realm realm) {
   when(realm.close).thenAnswer((_) {});
 }
@@ -51,10 +79,7 @@ void main() {
     late AuthenticationRepository authentication;
 
     setUp(() async {
-      database = DatabaseRepository(
-        directory: directory,
-        openRealmDebug: ({required path}) => MockRealm(),
-      );
+      database = TestDatabaseRepository(directory: directory);
 
       await database.initialise();
 
@@ -66,10 +91,7 @@ void main() {
 
     group('account', () {
       setUp(() {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
       });
 
       test(
@@ -98,10 +120,7 @@ void main() {
 
     group('isAuthenticated', () {
       setUp(() {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
       });
 
       test('returns [true] if authenticated.', () async {
@@ -124,10 +143,7 @@ void main() {
 
     group('isNotAuthenticated', () {
       setUp(() {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
       });
 
       test('returns [true] if not authenticated.', () {
@@ -150,10 +166,7 @@ void main() {
 
     group('login()', () {
       test('logs the user in.', () {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
 
         final account = MockAccount();
         stubAccount(account);
@@ -168,10 +181,7 @@ void main() {
       test(
         'throws an [AlreadyLoggedInException] when already logged in.',
         () async {
-          authentication = AuthenticationRepository(
-            database: database,
-            deriveHashDebug: ({required password}) async => password,
-          );
+          authentication = TestAuthenticationRepository(database: database);
 
           final account = MockAccount();
           stubAccount(account);
@@ -195,10 +205,7 @@ void main() {
         'throws an [AccountNotExistsException] if no account exists with the '
         'given username.',
         () {
-          authentication = AuthenticationRepository(
-            database: database,
-            deriveHashDebug: ({required password}) async => password,
-          );
+          authentication = TestAuthenticationRepository(database: database);
 
           stubFinder<Account>(database.realm, () => null);
 
@@ -215,10 +222,7 @@ void main() {
       test(
         'throws a [WrongPasswordException] if the passwords do not match.',
         () {
-          authentication = AuthenticationRepository(
-            database: database,
-            deriveHashDebug: ({required password}) async => password,
-          );
+          authentication = TestAuthenticationRepository(database: database);
 
           final account = MockAccount();
           stubAccount(account);
@@ -235,12 +239,30 @@ void main() {
       );
 
       test(
+        'throws a [ResourceException] upon failure to hash the password.',
+        () {
+          authentication = FaultyTestAuthenticationRepository(
+            database: database,
+            thrower: () {
+              throw StateError('');
+            },
+          );
+
+          final account = MockAccount();
+          stubAccount(account);
+          stubFinder<Account>(database.realm, () => account);
+
+          expect(
+            authentication.login(username: username, password: password),
+            throwsResourceException,
+          );
+        },
+      );
+
+      test(
         'throws a [StateError] when [AuthenticationRepository] is disposed.',
         () async {
-          authentication = AuthenticationRepository(
-            database: database,
-            deriveHashDebug: ({required password}) async => password,
-          );
+          authentication = TestAuthenticationRepository(database: database);
 
           await expectLater(authentication.dispose(), completes);
 
@@ -251,29 +273,8 @@ void main() {
         },
       );
 
-      test('throws a [StateError] upon failure to hash the password.', () {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async {
-            throw StateError('');
-          },
-        );
-
-        final account = MockAccount();
-        stubAccount(account);
-        stubFinder<Account>(database.realm, () => account);
-
-        expect(
-          authentication.login(username: username, password: password),
-          throwsStateError,
-        );
-      });
-
       test('updates the initialisation state.', () async {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
 
         unawaited(
           expectLater(
@@ -313,10 +314,7 @@ void main() {
 
     group('register()', () {
       test('registers the user.', () {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
 
         final account = MockAccount();
         stubAccount(account);
@@ -338,10 +336,7 @@ void main() {
         'throws an [AccountAlreadyExistsException] when there already is an '
         'account with a given username.',
         () {
-          authentication = AuthenticationRepository(
-            database: database,
-            deriveHashDebug: ({required password}) async => password,
-          );
+          authentication = TestAuthenticationRepository(database: database);
 
           final account = MockAccount();
           stubAccount(account);
@@ -364,10 +359,7 @@ void main() {
         'throws a [FailedToRegisterException] when unable to write the changes '
         'to the database.',
         () {
-          authentication = AuthenticationRepository(
-            database: database,
-            deriveHashDebug: ({required password}) async => password,
-          );
+          authentication = TestAuthenticationRepository(database: database);
 
           final account = MockAccount();
           stubAccount(account);
@@ -389,11 +381,34 @@ void main() {
       );
 
       test(
+        'throws a [ResourceException] upon failure to hash the password.',
+        () {
+          authentication = FaultyTestAuthenticationRepository(
+            database: database,
+            thrower: () {
+              throw StateError('');
+            },
+          );
+
+          stubFinder<Account>(database.realm, () => null);
+
+          expect(
+            authentication.register(
+              username: username,
+              nickname: null,
+              password: password,
+            ),
+            throwsResourceException,
+          );
+        },
+      );
+
+      test(
         'throws a [StateError] when [AuthenticationRepository] is disposed.',
         () async {
-          authentication = AuthenticationRepository(
+          authentication = FaultyTestAuthenticationRepository(
             database: database,
-            deriveHashDebug: ({required password}) async {
+            thrower: () {
               throw StateError('');
             },
           );
@@ -410,34 +425,11 @@ void main() {
           );
         },
       );
-
-      test('throws a [StateError] upon failure to hash the password.', () {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async {
-            throw StateError('');
-          },
-        );
-
-        stubFinder<Account>(database.realm, () => null);
-
-        expect(
-          authentication.register(
-            username: username,
-            nickname: null,
-            password: password,
-          ),
-          throwsStateError,
-        );
-      });
     });
 
     group('logout()', () {
       test('logs the user out.', () async {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
 
         final account = MockAccount();
         stubAccount(account);
@@ -457,10 +449,7 @@ void main() {
       });
 
       test('is idempotent.', () async {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
 
         await expectLater(authentication.logout(), completes);
         await expectLater(authentication.logout(), completes);
@@ -469,10 +458,7 @@ void main() {
 
     group('dispose()', () {
       test('disposes of the repository.', () async {
-        authentication = AuthenticationRepository(
-          database: database,
-          deriveHashDebug: ({required password}) async => password,
-        );
+        authentication = TestAuthenticationRepository(database: database);
 
         final account = MockAccount();
         stubAccount(account);
@@ -492,10 +478,7 @@ void main() {
       test(
         'is idempotent.',
         () async {
-          authentication = AuthenticationRepository(
-            database: database,
-            deriveHashDebug: ({required password}) async => password,
-          );
+          authentication = TestAuthenticationRepository(database: database);
 
           await expectLater(authentication.dispose(), completes);
           await expectLater(authentication.dispose(), completes);

@@ -20,6 +20,20 @@ class MockTodos extends Mock implements Todos {}
 
 class MockTodo extends Mock implements Todo {}
 
+class TestAuthenticationRepository extends AuthenticationRepository {
+  TestAuthenticationRepository({required super.database});
+
+  @override
+  Future<String> deriveHash({required String password}) async => password;
+}
+
+class TestDatabaseRepository extends DatabaseRepository {
+  TestDatabaseRepository({required super.directory});
+
+  @override
+  Realm openRealm({required String path}) => MockRealm();
+}
+
 void stubRealm(Realm realm) {
   when(realm.close).thenAnswer((_) {});
 }
@@ -94,19 +108,13 @@ void main() {
     late TodoRepository todos;
 
     setUp(() async {
-      database = DatabaseRepository(
-        directory: directory,
-        openRealmDebug: ({required path}) => MockRealm(),
-      );
+      database = TestDatabaseRepository(directory: directory);
 
       await database.initialise();
 
       stubRealm(database.realm);
 
-      authentication = AuthenticationRepository(
-        database: database,
-        deriveHashDebug: ({required password}) async => password,
-      );
+      authentication = TestAuthenticationRepository(database: database);
 
       final account = MockAccount();
       stubAccount(account);

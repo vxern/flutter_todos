@@ -11,6 +11,39 @@ import '../matchers.dart';
 
 class MockRealm extends Mock implements Realm {}
 
+class TestDatabaseRepository extends DatabaseRepository {
+  TestDatabaseRepository({required super.directory});
+
+  @override
+  Realm openRealm({required String path}) => MockRealm();
+}
+
+class FaultyTestDatabaseRepository extends DatabaseRepository {
+  final Never Function() thrower;
+
+  FaultyTestDatabaseRepository({
+    required super.directory,
+    required this.thrower,
+  });
+
+  @override
+  Realm openRealm({required String path}) {
+    thrower();
+  }
+}
+
+class VariablyFaultyTestDatabaseRepository extends DatabaseRepository {
+  final Realm Function() openRealm_;
+
+  VariablyFaultyTestDatabaseRepository({
+    required super.directory,
+    required Realm Function() openRealm,
+  }) : openRealm_ = openRealm;
+
+  @override
+  Realm openRealm({required String path}) => openRealm_();
+}
+
 void stub(Realm realm) {
   when(realm.close).thenAnswer((_) {});
 }
@@ -23,10 +56,7 @@ void main() {
       late DatabaseRepository database;
 
       setUp(() {
-        database = DatabaseRepository(
-          directory: directory,
-          openRealmDebug: ({required path}) => MockRealm(),
-        );
+        database = TestDatabaseRepository(directory: directory);
       });
       tearDown(() async {
         await database.dispose();
@@ -62,19 +92,13 @@ void main() {
       });
 
       test('initialises the repository.', () async {
-        database = DatabaseRepository(
-          directory: directory,
-          openRealmDebug: ({required path}) => MockRealm(),
-        );
+        database = TestDatabaseRepository(directory: directory);
 
         expect(database.initialise(), completes);
       });
 
       test('throws a [StateError] when already initialised.', () async {
-        database = DatabaseRepository(
-          directory: directory,
-          openRealmDebug: ({required path}) => MockRealm(),
-        );
+        database = TestDatabaseRepository(directory: directory);
 
         await expectLater(database.initialise(), completes);
         await expectLater(database.initialise, throwsStateError);
@@ -83,10 +107,7 @@ void main() {
       test(
         'throws a [StateError] when [DatabaseRepository] is disposed.',
         () async {
-          database = DatabaseRepository(
-            directory: directory,
-            openRealmDebug: ({required path}) => MockRealm(),
-          );
+          database = TestDatabaseRepository(directory: directory);
 
           await expectLater(database.initialise(), completes);
 
@@ -101,9 +122,9 @@ void main() {
         'throws an [InitialisationException] on failure to initialise',
         () {
           test('due to a [FileSystemException].', () async {
-            database = DatabaseRepository(
+            database = FaultyTestDatabaseRepository(
               directory: directory,
-              openRealmDebug: ({required path}) {
+              thrower: () {
                 throw const FileSystemException();
               },
             );
@@ -112,9 +133,9 @@ void main() {
           });
 
           test('due to a [RealmException].', () async {
-            database = DatabaseRepository(
+            database = FaultyTestDatabaseRepository(
               directory: directory,
-              openRealmDebug: ({required path}) {
+              thrower: () {
                 throw RealmException('');
               },
             );
@@ -127,31 +148,31 @@ void main() {
       test(
         'does not throw when attempting to initialise again after failure.',
         () async {
-          late RealmOpener openRealm;
+          late Realm Function() openRealm;
 
-          database = DatabaseRepository(
+          database = VariablyFaultyTestDatabaseRepository(
             directory: directory,
-            openRealmDebug: ({required path}) => openRealm(path: path),
+            openRealm: () => openRealm(),
           );
 
-          openRealm = ({required path}) {
+          openRealm = () {
             throw const FileSystemException();
           };
 
           await expectLater(database.initialise, throwsInitialisationException);
 
-          openRealm = ({required path}) => MockRealm();
+          openRealm = MockRealm.new;
 
           await expectLater(database.initialise(), completes);
         },
       );
 
       test('updates the initialisation state.', () async {
-        late RealmOpener openRealm;
+        late Realm Function() openRealm;
 
-        database = DatabaseRepository(
+        database = VariablyFaultyTestDatabaseRepository(
           directory: directory,
-          openRealmDebug: ({required path}) => openRealm(path: path),
+          openRealm: () => openRealm(),
         );
 
         unawaited(
@@ -166,13 +187,13 @@ void main() {
           ),
         );
 
-        openRealm = ({required path}) {
+        openRealm = () {
           throw const FileSystemException();
         };
 
         await expectLater(database.initialise, throwsInitialisationException);
 
-        openRealm = ({required path}) => MockRealm();
+        openRealm = MockRealm.new;
 
         expect(database.initialise(), completes);
       });
@@ -183,10 +204,7 @@ void main() {
 
       setUp(
         () async {
-          database = DatabaseRepository(
-            directory: directory,
-            openRealmDebug: ({required path}) => MockRealm(),
-          );
+          database = TestDatabaseRepository(directory: directory);
 
           await database.initialise();
 
