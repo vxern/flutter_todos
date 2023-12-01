@@ -1,13 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_todos/cubits.dart';
-import 'package:flutter_todos/repositories/repository.dart';
-import 'package:flutter_todos/utils.dart';
+
 import 'package:realm/realm.dart';
-import 'package:sprint/sprint.dart';
 import 'package:universal_io/io.dart';
 
 import 'package:flutter_todos/constants.dart' as constants;
+import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 import 'package:flutter_todos/structs/account.dart';
 
 final _schemas = List<SchemaObject>.unmodifiable([

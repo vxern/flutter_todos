@@ -1,5 +1,6 @@
-import 'package:flutter_todos/cubits.dart';
 import 'package:sprint/sprint.dart';
+
+import 'package:flutter_todos/cubits.dart';
 
 mixin Loggable {
   abstract final Sprint log;

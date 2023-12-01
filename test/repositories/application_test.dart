@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:universal_io/io.dart';
+
 import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/application.dart';
 import 'package:flutter_todos/repositories/loaders/directories.dart';
 import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:universal_io/io.dart';
-
 import '../matchers.dart';
 
 class MockDirectoryLoader extends Mock implements DirectoriesLoader {}

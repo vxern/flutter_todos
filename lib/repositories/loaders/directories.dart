@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
-import 'package:flutter_todos/repositories/loaders/loader.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_io/io.dart';
 
 import 'package:flutter_todos/repositories/application.dart';
+import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
+import 'package:flutter_todos/repositories/loaders/loader.dart';
 
 class Directories extends Equatable {
   final Directory documents;

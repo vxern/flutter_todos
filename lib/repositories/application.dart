@@ -1,13 +1,7 @@
-import 'package:flutter/material.dart';
-
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/repositories/loaders/directories.dart';
 import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
 import 'package:flutter_todos/repositories/repository.dart';
-import 'package:flutter_todos/utils.dart';
-import 'package:sprint/sprint.dart';
-
-import 'package:flutter_todos/repositories/loaders/directories.dart';
 
 class ApplicationRepository extends Repository {
   final DirectoriesLoader directories;

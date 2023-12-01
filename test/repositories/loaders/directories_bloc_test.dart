@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:universal_io/io.dart';
+
 import 'package:flutter_todos/repositories/loaders/directories.dart';
 import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
-import 'package:universal_io/io.dart';
 
 class MockDirectoriesBloc extends MockBloc<DirectoriesEvent, DirectoriesState>
     implements DirectoriesBloc {}

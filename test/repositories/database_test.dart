@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_todos/cubits.dart';
-import 'package:flutter_todos/repositories/database.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:realm/realm.dart';
 import 'package:universal_io/io.dart';
 
+import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/repositories/database.dart';
 import '../matchers.dart';
 
 class MockRealm extends Mock implements Realm {}

@@ -1,12 +1,10 @@
-import 'package:flutter_todos/cubits.dart';
-import 'package:flutter_todos/repositories/repository.dart';
-import 'package:flutter_todos/utils.dart';
 import 'package:realm/realm.dart';
 
+import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/repositories/database.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 import 'package:flutter_todos/structs/account.dart';
-import 'package:sprint/src/sprint.dart';
 
 class TodoRepository extends Repository {
   final AuthenticationRepository _authentication;

@@ -29,7 +29,7 @@ final router = GoRouter(
       builder: (context, state) {
         final authentication = context.read<AuthenticationRepository>();
 
-        final todoList = authentication.account!.todos;
+        final todoList = authentication.account.todos;
         if (todoList == null) {
           throw StateError('Attempted to access todos when no todos exist.');
         }
@@ -46,7 +46,7 @@ final router = GoRouter(
         final authentication = context.read<AuthenticationRepository>();
         final todos = context.read<TodoRepository>();
 
-        final todoList = authentication.account!.todos;
+        final todoList = authentication.account.todos;
         if (todoList == null) {
           throw StateError(
             'Attempted to access todo with ID $id when no todos exist.',

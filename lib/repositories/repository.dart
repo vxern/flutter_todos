@@ -1,5 +1,6 @@
-import 'package:flutter_todos/utils.dart';
 import 'package:sprint/sprint.dart';
+
+import 'package:flutter_todos/utils.dart';
 
 abstract class Repository with Loggable, Initialisable, Disposable {
   @override

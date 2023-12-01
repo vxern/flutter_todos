@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_todos/repositories/repository.dart';
 
+import 'package:flutter_todos/repositories/repository.dart';
 import '../matchers.dart';
 
 class TestRepository extends Repository {
