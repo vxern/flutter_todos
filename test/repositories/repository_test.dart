@@ -34,7 +34,7 @@ void main() {
       test('throws a [StateError] when already initialised.', () async {
         final test = TestRepository();
 
-        test.initialisationCubit.declareInitialised();
+        test.initialisationCubit.declareInitialised(value: ());
         await expectLater(test.initialise(), throwsStateError);
       });
 

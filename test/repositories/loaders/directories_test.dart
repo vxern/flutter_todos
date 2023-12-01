@@ -1,24 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_todos/cubits.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:universal_io/io.dart';
 
 import 'package:flutter_todos/repositories/application.dart';
 import 'package:flutter_todos/repositories/loaders/directories.dart';
-import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
 
 class TestDirectoriesLoader extends DirectoriesLoader {
-  TestDirectoriesLoader({required super.bloc});
-
   @override
   Future<Directory> getDocumentsDirectory() async => directory;
 }
 
 class FaultyTestDirectoriesLoader extends DirectoriesLoader {
-  FaultyTestDirectoriesLoader({required super.bloc});
-
   @override
   Future<Directory> getDocumentsDirectory() async {
     throw MissingPlatformDirectoryException('');
@@ -35,15 +31,15 @@ void main() {
       tearDown(() async => loader.dispose());
 
       test('loads the directories.', () async {
-        loader = TestDirectoriesLoader(bloc: DirectoriesBloc());
+        loader = TestDirectoriesLoader();
 
-        expect(loader.load(), completion(Directories(documents: directory)));
+        expect(loader.load(), completes);
       });
 
       test(
         'throws a [StateError] when [DirectoriesLoader] is disposed.',
         () async {
-          loader = DirectoriesLoader(bloc: DirectoriesBloc());
+          loader = TestDirectoriesLoader();
 
           await expectLater(loader.dispose(), completes);
           await expectLater(loader.load, throwsStateError);
@@ -53,50 +49,58 @@ void main() {
       test(
         'throws a [DirectoriesLoadException] on failure to load.',
         () {
-          loader = FaultyTestDirectoriesLoader(bloc: DirectoriesBloc());
+          loader = FaultyTestDirectoriesLoader();
 
           expect(loader.load, throwsA(isA<DirectoriesLoadException>()));
         },
       );
 
-      test('updates the bloc state.', () async {
-        final bloc = DirectoriesBloc();
+      test('updates the bloc state when loading successfully.', () async {
+        final loader = TestDirectoriesLoader();
 
         unawaited(
           expectLater(
-            bloc.stream,
+            loader.initialisationCubit.stream,
             emitsInOrder([
-              isA<DirectoriesLoadingState>(),
-              isA<DirectoriesLoadingFailedState>(),
-              isA<DirectoriesLoadingState>(),
-              isA<DirectoriesLoadedState>(),
+              isA<InitialisingState>(),
+              isA<InitialisedState<Directories>>(),
             ]),
           ),
         );
 
-        loader = FaultyTestDirectoriesLoader(bloc: bloc);
+        await expectLater(loader.load(), completes);
+      });
+
+      test('updates the bloc state when failing to load.', () async {
+        final loader = FaultyTestDirectoriesLoader();
+
+        unawaited(
+          expectLater(
+            loader.initialisationCubit.stream,
+            emitsInOrder([
+              isA<InitialisingState>(),
+              isA<InitialisationFailedState>(),
+            ]),
+          ),
+        );
 
         await expectLater(
           loader.load,
           throwsA(isA<DirectoriesLoadException>()),
         );
-
-        loader = TestDirectoriesLoader(bloc: bloc);
-
-        await expectLater(loader.load(), completes);
       });
     });
 
     group('dispose()', () {
       late DirectoriesLoader loader;
 
-      setUp(() => loader = TestDirectoriesLoader(bloc: DirectoriesBloc()));
+      setUp(() => loader = TestDirectoriesLoader());
 
       test('disposes of the repository.', () async {
         await expectLater(loader.dispose(), completes);
 
         expect(loader.isDisposed, isTrue);
-        expect(loader.bloc.isClosed, isTrue);
+        expect(loader.initialisationCubit.isClosed, isTrue);
       });
 
       test(

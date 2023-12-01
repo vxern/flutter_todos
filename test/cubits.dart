@@ -5,14 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_todos/cubits.dart';
 
-class MockInitialisationCubit extends MockCubit<InitialisationState>
-    implements InitialisationCubit {}
+class MockInitialisationCubit<T> extends MockCubit<InitialisationState>
+    implements InitialisationCubit<T> {}
 
 void main() {
   test(
     'InitialisationCubit state stream functions correctly.',
     () {
-      final cubit = MockInitialisationCubit();
+      final cubit = MockInitialisationCubit<()>();
 
       whenListen(
         cubit,
@@ -21,7 +21,7 @@ void main() {
             const InitialisingState(),
             const InitialisationFailedState(),
             const InitialisingState(),
-            const InitialisedState(),
+            const InitialisedState(value: ()),
           ],
         ),
       );
@@ -33,7 +33,7 @@ void main() {
             const InitialisingState(),
             const InitialisationFailedState(),
             const InitialisingState(),
-            const InitialisedState(),
+            const InitialisedState(value: ()),
           ]),
         ),
       );
@@ -50,7 +50,7 @@ void main() {
     blocTest(
       'emits [] when nothing is added.',
       build: InitialisationCubit.new,
-      expect: () => [],
+      expect: () => const <()>[],
     );
 
     // Since [UninitialisedState] is the default state and unchanged states are
@@ -76,8 +76,8 @@ void main() {
     blocTest(
       'emits [InitialisedState] when [declareInitialised()] is called.',
       build: InitialisationCubit.new,
-      act: (cubit) => cubit.declareInitialised(),
-      expect: () => [const InitialisedState()],
+      act: (cubit) => cubit.declareInitialised(value: ()),
+      expect: () => [const InitialisedState(value: ())],
     );
 
     blocTest(

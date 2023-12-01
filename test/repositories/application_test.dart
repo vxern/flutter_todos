@@ -7,17 +7,17 @@ import 'package:universal_io/io.dart';
 import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/application.dart';
 import 'package:flutter_todos/repositories/loaders/directories.dart';
-import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
 import '../matchers.dart';
 
 class MockDirectoryLoader extends Mock implements DirectoriesLoader {}
 
 final directories = Directories(documents: Directory('/'));
-final directoriesLoader = DirectoriesLoader(bloc: DirectoriesBloc());
+final directoriesLoader = DirectoriesLoader();
 
 void stub(DirectoriesLoader directoriesLoader) {
-  final bloc = DirectoriesBloc();
-  when(() => directoriesLoader.bloc).thenReturn(bloc);
+  final initialisationCubit = InitialisationCubit<Directories>();
+  when(() => directoriesLoader.initialisationCubit)
+      .thenReturn(initialisationCubit);
   when(directoriesLoader.dispose).thenAnswer((_) async {});
 }
 
