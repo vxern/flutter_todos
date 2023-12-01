@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sprint/sprint.dart';
 
@@ -14,7 +17,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final log = Sprint('Registration');
+  final log = Sprint('Login');
 
   final _formKey = GlobalKey<FormState>();
 
@@ -22,43 +25,37 @@ class _LoginPageState extends State<LoginPage> {
   late String password;
 
   Future<void> login() async {
+    final messenger = ScaffoldMessenger.of(context);
     final authentication = context.read<AuthenticationRepository>();
 
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(const SnackBar(content: Text('Logging in...')));
-
+    messenger.showSnackBar(const SnackBar(content: Text('Logging in...')));
     log.info('Logging into $username...');
 
     try {
       await authentication.login(username: username, password: password);
     } on AlreadyLoggedInException catch (exception) {
       await authentication.logout();
-
-      log.severe(exception);
-
-      context.goNamed('home');
-
+      messenger.showSnackBar(SnackBar(content: Text(exception.message)));
+      if (context.mounted) {
+        context.goNamed('home');
+      }
       return;
     } on AuthenticationException catch (exception) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(SnackBar(content: Text(exception.message)));
-
+      messenger.showSnackBar(SnackBar(content: Text(exception.message)));
       log.warn('Failed to log in: $exception');
-
       return;
     }
 
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(const SnackBar(content: Text('Logged in successfully.')));
-
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Logged in successfully.')),
+    );
     log.success('Logged into $username.');
 
-    await Future.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(seconds: 1));
 
-    context.goNamed('todos');
+    if (context.mounted) {
+      context.goNamed('todos');
+    }
   }
 
   @override
@@ -74,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: const InputDecoration(hintText: 'Username'),
                   onChanged: (value) => username = value,
                   validator: (value) {
-                    if (value == null) {
+                    if (value == null || value.isEmpty) {
                       return 'Please input a username.';
                     }
 
@@ -111,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                             return;
                           }
 
-                          login();
+                          unawaited(login());
                         },
                         child: const Text('Login'),
                       ),
