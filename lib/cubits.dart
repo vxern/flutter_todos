@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 sealed class InitialisationState {
@@ -12,15 +13,17 @@ final class InitialisingState extends InitialisationState {
   const InitialisingState();
 }
 
-final class InitialisedState extends InitialisationState {
-  const InitialisedState();
+final class InitialisedState<T> extends InitialisationState {
+  final T value;
+
+  const InitialisedState({required this.value});
 }
 
 final class InitialisationFailedState extends InitialisationState {
   const InitialisationFailedState();
 }
 
-class InitialisationCubit extends Cubit<InitialisationState> {
+class InitialisationCubit<T> extends Cubit<InitialisationState> {
   bool get isInitialised =>
       state is InitialisingState || state is InitialisedState;
 
@@ -30,7 +33,8 @@ class InitialisationCubit extends Cubit<InitialisationState> {
 
   void declareInitialising() => emit(const InitialisingState());
 
-  void declareInitialised() => emit(const InitialisedState());
+  void declareInitialised({required T value}) =>
+      emit(InitialisedState<T>(value: value));
 
   void declareFailed() => emit(const InitialisationFailedState());
 }
