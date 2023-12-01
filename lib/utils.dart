@@ -6,17 +6,15 @@ mixin Loggable {
   abstract final Sprint log;
 }
 
-mixin Initialisable {
-  final initialisationCubit = InitialisationCubit();
+mixin Initialisable<T> {
+  final initialisationCubit = InitialisationCubit<T>();
 
   Future<void> initialise();
 
   Future<void> uninitialise() async =>
       initialisationCubit.declareUninitialised();
-}
 
-mixin Loadable<T> {
-  Future<T> load();
+  Future<void> close() async => initialisationCubit.close();
 }
 
 mixin Disposable {
