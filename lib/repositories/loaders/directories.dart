@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
+import 'package:flutter_todos/repositories/loaders/loader.dart';
 import 'package:path_provider/path_provider.dart' as pathProvider;
 import 'package:universal_io/io.dart';
 
@@ -17,7 +18,7 @@ class Directories extends Equatable {
 typedef DirectoryFetcher = Future<Directory> Function();
 
 class DirectoriesLoader
-    extends ApplicationResourceLoader<Directories, DirectoriesBloc> {
+    extends ApplicationLoader<Directories, DirectoriesBloc> {
   // * Visible for testing.
   final DirectoryFetcher getApplicationDocumentsDirectory;
 

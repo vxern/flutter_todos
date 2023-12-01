@@ -9,22 +9,6 @@ import 'package:sprint/sprint.dart';
 
 import 'package:flutter_todos/repositories/loaders/directories.dart';
 
-abstract class ApplicationResourceLoader<T, B extends Bloc>
-    with Loadable<T>, Loggable, Disposable {
-  @override
-  final Sprint log;
-
-  final B bloc;
-
-  ApplicationResourceLoader({required this.bloc}) : log = Sprint('${T}Loader');
-
-  @override
-  Future<void> dispose() async {
-    await super.dispose();
-    await bloc.close();
-  }
-}
-
 class ApplicationRepository extends Repository {
   final DirectoriesLoader directories;
 
