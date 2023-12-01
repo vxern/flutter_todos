@@ -90,6 +90,10 @@ class InitialisationArbiter extends StatelessWidget {
             .toList(),
         initialise: () async {
           for (final repository in repositories) {
+            if (repository.initialisationCubit.isInitialised) {
+              continue;
+            }
+
             await repository.initialise();
           }
         },
