@@ -1,16 +1,16 @@
 import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/loaders/directories.dart';
-import 'package:flutter_todos/repositories/loaders/directories_bloc.dart';
 import 'package:flutter_todos/repositories/repository.dart';
 
 class ApplicationRepository extends Repository {
   final DirectoriesLoader directories;
 
+  List<InitialisationCubit> get loaders => [directories.initialisationCubit];
+
   ApplicationRepository({
     // * Visible for testing.
     DirectoriesLoader? directoriesLoader,
-  })  : directories =
-            directoriesLoader ?? DirectoriesLoader(bloc: DirectoriesBloc()),
+  })  : directories = directoriesLoader ?? DirectoriesLoader(),
         super(name: 'ApplicationRepository');
 
   /// ! Throws:
@@ -32,7 +32,7 @@ class ApplicationRepository extends Repository {
       throw const InitialisationException();
     }
 
-    initialisationCubit.declareInitialised();
+    initialisationCubit.declareInitialised(value: const ());
   }
 
   @override

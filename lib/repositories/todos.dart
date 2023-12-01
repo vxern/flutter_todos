@@ -47,7 +47,7 @@ class TodoRepository extends Repository {
       throw const InitialisationException();
     }
 
-    initialisationCubit.declareInitialised();
+    initialisationCubit.declareInitialised(value: const ());
   }
 
   // TODO(vxern): Add ID validation?
@@ -67,7 +67,7 @@ class TodoRepository extends Repository {
     return todo;
   }
 
-  /// ! Throws [ResourceException] if failed to add todo.
+  /// ! Throws [ResourceException] if failed to add to-do.
   Future<Todo> addTodo() async {
     final todo = Todo(Uuid.v4(), 'Draft', DateTime.now());
 
@@ -81,7 +81,7 @@ class TodoRepository extends Repository {
     return todo;
   }
 
-  /// ! Throws [ResourceException] if failed to remove todo.
+  /// ! Throws [ResourceException] if failed to remove to-do.
   Future<void> removeTodo({required Todo todo}) async {
     try {
       await _database.realm.writeAsync(
@@ -100,7 +100,7 @@ class TodoRepository extends Repository {
     }
   }
 
-  /// ! Throws [ResourceException] if failed to add todo row.
+  /// ! Throws [ResourceException] if failed to add to-do row.
   Future<TodoRow> addRow({required Todo todo}) async {
     final row = TodoRow('');
 
@@ -114,7 +114,7 @@ class TodoRepository extends Repository {
     return row;
   }
 
-  /// ! Throws [ResourceException] if failed to remove todo row.
+  /// ! Throws [ResourceException] if failed to remove to-do row.
   Future<void> removeRow({required TodoRow row}) async {
     try {
       await _database.realm.writeAsync(() => _database.realm.delete(row));

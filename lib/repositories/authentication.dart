@@ -64,7 +64,7 @@ class AuthenticationRepository extends Repository with _Hashing {
     required String username,
     required String password,
   }) async {
-    await initialise();
+    verifyNotDisposed(message: 'Attempted to log in when disposed.');
 
     if (isAuthenticated) {
       throw const AlreadyLoggedInException();
@@ -95,7 +95,7 @@ class AuthenticationRepository extends Repository with _Hashing {
     }
 
     _account = account;
-    initialisationCubit.declareInitialised();
+    initialisationCubit.declareInitialised(value: ());
   }
 
   /// ! Throws:
@@ -160,7 +160,7 @@ class AuthenticationRepository extends Repository with _Hashing {
 
 mixin _Hashing {
   static final _argon2 = Argon2id(
-    parallelism: Platform.numberOfProcessors * 64,
+    parallelism: Platform.numberOfProcessors * 2,
     memory: constants.hashingMemory,
     iterations: Platform.numberOfProcessors,
     hashLength: constants.hashingHashLength,

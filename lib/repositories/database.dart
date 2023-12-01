@@ -77,7 +77,7 @@ class DatabaseRepository extends Repository {
       }
     }
 
-    initialisationCubit.declareInitialised();
+    initialisationCubit.declareInitialised(value: ());
     log.success('Database opened.');
   }
 
