@@ -59,14 +59,12 @@ class DatabaseRepository extends Repository {
 
     if (_realm == null) {
       try {
-        _realm = openRealm(path: directory.path);
+        _realm = openRealm(path: path);
       } on FileSystemException catch (exception) {
         initialisationCubit.declareFailed();
-
         log
           ..severe('Unable to access Realm database file. Missing permissions?')
           ..severe(exception);
-
         throw const InitialisationException();
       } on RealmException catch (exception) {
         initialisationCubit.declareFailed();
