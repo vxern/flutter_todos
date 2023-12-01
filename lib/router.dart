@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_todos/main.dart';
+import 'package:flutter_todos/widgets/foundation/initialisation-arbiter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter_todos/menus/home.dart';
@@ -12,7 +14,8 @@ import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/repositories/todos.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
+final _authenticationNavigatorKey = GlobalKey<NavigatorState>();
+final _todosNavigatorKey = GlobalKey<NavigatorState>();
 
 final router = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -23,55 +26,83 @@ final router = GoRouter(
       path: '/',
       builder: (context, state) => const HomePage(),
     ),
-    GoRoute(
-      name: 'todos',
-      path: '/todos',
-      builder: (context, state) {
-        final authentication = context.read<AuthenticationRepository>();
+    ShellRoute(
+      navigatorKey: _todosNavigatorKey,
+      builder: (context, state, child) => InitialisationArbiter(
+        name: #todos,
+        initialisers: [context.read<TodoRepository>().initialisationCubit],
+        initialise: () async {
+          final todos = context.read<TodoRepository>();
+          if (todos.initialisationCubit.isInitialised) {
+            return;
+          }
 
-        final todoList = authentication.account.todos;
-        if (todoList == null) {
-          throw StateError('Attempted to access todos when no todos exist.');
-        }
+          await todos.initialise();
+        },
+        whenInitialising: (context) => const MaterialApp(
+          home: Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+        ),
+        whenFailed: (context, initialiser) => const MaterialApp(
+          home: Scaffold(body: Center(child: Text('Failed to load todos.'))),
+        ),
+        whenDone: (context) => child,
+      ),
+      routes: [
+        GoRoute(
+          name: 'todos',
+          path: '/todos',
+          builder: (context, state) {
+            final authentication = context.read<AuthenticationRepository>();
 
-        return TodosPage(todos: todoList);
-      },
-      redirect: redirectIfUnauthenticated,
-    ),
-    GoRoute(
-      path: '/todo/:id',
-      builder: (context, state) {
-        final id = state.pathParameters['id']!;
+            final todoList = authentication.account.todos;
+            if (todoList == null) {
+              throw StateError(
+                  'Attempted to access todos when no todos exist.');
+            }
 
-        final authentication = context.read<AuthenticationRepository>();
-        final todos = context.read<TodoRepository>();
+            return TodosPage(todos: todoList);
+          },
+          redirect: redirectIfUnauthenticated,
+        ),
+        GoRoute(
+          path: '/todo/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
 
-        final todoList = authentication.account.todos;
-        if (todoList == null) {
-          throw StateError(
-            'Attempted to access todo with ID $id when no todos exist.',
-          );
-        }
+            final authentication = context.read<AuthenticationRepository>();
+            final todos = context.read<TodoRepository>();
 
-        final todo = todos.find(id: id);
+            final todoList = authentication.account.todos;
+            if (todoList == null) {
+              throw StateError(
+                'Attempted to access todo with ID $id when no todos exist.',
+              );
+            }
 
-        return TodoPage(todo: todo);
-      },
-      redirect: (context, state) async {
-        final redirect = await redirectIfUnauthenticated(context, state);
-        if (redirect != null) {
-          return redirect;
-        }
+            final todo = todos.find(id: id);
 
-        if (!state.pathParameters.containsKey('id')) {
-          throw StateError('Attempted to navigate to todo page without ID.');
-        }
+            return TodoPage(todo: todo);
+          },
+          redirect: (context, state) async {
+            final redirect = await redirectIfUnauthenticated(context, state);
+            if (redirect != null) {
+              return redirect;
+            }
 
-        return null;
-      },
+            if (!state.pathParameters.containsKey('id')) {
+              throw StateError(
+                  'Attempted to navigate to todo page without ID.');
+            }
+
+            return null;
+          },
+        ),
+      ],
     ),
     ShellRoute(
-      navigatorKey: _shellNavigatorKey,
+      navigatorKey: _authenticationNavigatorKey,
       builder: (context, state, child) => child,
       routes: [
         GoRoute(
