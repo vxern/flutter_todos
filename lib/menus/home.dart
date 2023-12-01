@@ -19,12 +19,12 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              FilledButton(
+              ElevatedButton(
                 onPressed: () => context.goNamed('login'),
                 child: const Text('Login'),
               ),
               const SizedBox(height: 10),
-              FilledButton(
+              ElevatedButton(
                 onPressed: () => context.goNamed('register'),
                 child: const Text('Register'),
               ),
