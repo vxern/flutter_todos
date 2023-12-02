@@ -28,27 +28,27 @@ final router = GoRouter(
     ),
     ShellRoute(
       navigatorKey: _todosNavigatorKey,
-      builder: (context, state, child) => InitialisationArbiter(
-        name: #todos,
-        initialisers: [context.read<TodoRepository>().initialisationCubit],
-        initialise: () async {
-          final todos = context.read<TodoRepository>();
-          if (todos.initialisationCubit.isInitialised) {
-            return;
-          }
-
-          await todos.initialise();
-        },
-        whenInitialising: (context) => const MaterialApp(
-          home: Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
-        ),
-        whenFailed: (context, initialiser) => const MaterialApp(
-          home: Scaffold(body: Center(child: Text('Failed to load todos.'))),
-        ),
-        whenDone: (context) => child,
-      ),
+      builder: arbiterGuard((context, child) => InitialisationArbiter(
+            name: #todos,
+            initialisers: [context.read<TodoRepository>().initialisationCubit],
+            initialise: () async {
+              final todos = context.read<TodoRepository>();
+              if (todos.initialisationCubit.isInitialised) {
+                return;
+              }
+              await todos.initialise();
+            },
+            whenInitialising: (context) => const MaterialApp(
+              home: Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              ),
+            ),
+            whenFailed: (context, initialiser) => const MaterialApp(
+              home:
+                  Scaffold(body: Center(child: Text('Failed to load todos.'))),
+            ),
+            whenDone: (context) => child,
+          )),
       routes: [
         GoRoute(
           name: 'todos',
@@ -93,7 +93,8 @@ final router = GoRouter(
 
             if (!state.pathParameters.containsKey('id')) {
               throw StateError(
-                  'Attempted to navigate to todo page without ID.');
+                'Attempted to navigate to todo page without ID.',
+              );
             }
 
             return null;
@@ -147,3 +148,19 @@ Future<String?> redirectIfAuthenticated(
 
   return null;
 }
+
+typedef ArbiterGetter = InitialisationArbiter Function(
+  BuildContext context,
+  Widget child,
+);
+
+ShellRouteBuilder arbiterGuard(ArbiterGetter getArbiter) =>
+    (context, state, child) {
+      final arbiter = getArbiter(context, child);
+
+      if (arbiter.isInitialised) {
+        return child;
+      }
+
+      return arbiter;
+    };

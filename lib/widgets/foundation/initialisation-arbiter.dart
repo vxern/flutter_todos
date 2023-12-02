@@ -28,6 +28,8 @@ class InitialisationArbiter extends StatelessWidget {
 
   late final InitialisationCubit failedInitialiser;
 
+  bool get isInitialised => _arbitrageCubit.isInitialised;
+
   factory InitialisationArbiter({
     required Symbol name,
     required List<InitialisationCubit> initialisers,
