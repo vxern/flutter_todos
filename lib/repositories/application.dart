@@ -3,11 +3,26 @@ import 'package:flutter_todos/repositories/loaders/directories.dart';
 import 'package:flutter_todos/repositories/repository.dart';
 
 class ApplicationRepository extends Repository {
+  static ApplicationRepository? _instance;
+
   final DirectoriesLoader directories;
 
   List<InitialisationCubit> get loaders => [directories.initialisationCubit];
 
-  ApplicationRepository({
+  factory ApplicationRepository({
+    // * Visible for testing.
+    DirectoriesLoader? directoriesLoader,
+  }) {
+    if (_instance != null) {
+      return _instance!;
+    }
+
+    return _instance = ApplicationRepository._(
+      directoriesLoader: directoriesLoader,
+    );
+  }
+
+  ApplicationRepository._({
     // * Visible for testing.
     DirectoriesLoader? directoriesLoader,
   })  : directories = directoriesLoader ?? DirectoriesLoader(),

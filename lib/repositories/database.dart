@@ -17,6 +17,8 @@ final _schemas = List<SchemaObject>.unmodifiable([
 ]);
 
 class DatabaseRepository extends Repository {
+  static DatabaseRepository? _instance;
+
   final Directory directory;
   Realm? _realm;
 
@@ -29,9 +31,16 @@ class DatabaseRepository extends Repository {
     return _realm!;
   }
 
-  DatabaseRepository({
-    required this.directory,
-  }) : super(name: 'DatabaseRepository');
+  factory DatabaseRepository({required Directory directory}) {
+    if (_instance != null) {
+      return _instance!;
+    }
+
+    return _instance = DatabaseRepository._(directory: directory);
+  }
+
+  DatabaseRepository._({required this.directory})
+      : super(name: 'DatabaseRepository');
 
   // * Visible for testing.
   Realm openRealm({required String path}) => Realm(

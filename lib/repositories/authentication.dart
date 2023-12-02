@@ -84,8 +84,8 @@ class AuthenticationRepository extends Repository with _Hashing {
     } on StateError catch (error) {
       const message = 'Failed to hash password during login.';
       log
-        ..fatal(message)
-        ..fatal(error);
+        ..severe(message)
+        ..severe(error);
       throw const ResourceException(message: message);
     }
 
