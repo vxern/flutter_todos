@@ -6,10 +6,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:realm/realm.dart';
 
-import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/repositories/database.dart';
 import 'package:flutter_todos/repositories/todos.dart';
 import 'package:flutter_todos/structs/account.dart';
+import 'package:flutter_todos/widgets/editable_list_tile.dart';
 
 class TodoState {
   final List<TodoRow> rows;
@@ -43,7 +43,19 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  Transaction? databaseTransaction;
+  Transaction? _transaction;
+
+  Future<void> _addTodoRow() async {
+    final todos = context.read<TodoRepository>();
+
+    await todos.addRow(todo: widget._todo);
+  }
+
+  Future<void> _removeTodoRow(TodoRow row) async {
+    final todos = context.read<TodoRepository>();
+
+    await todos.removeRow(row: row);
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -68,80 +80,23 @@ class _TodoPageState extends State<TodoPage> {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 10),
                       itemBuilder: (context, index) {
-                        final TodoRow row;
-                        try {
-                          row = state.rows[index];
-                        } on StateError {
-                          throw StateError(
-                            'Attempted to access row using an invalid index. Row '
-                            'count: ${state.rows.length}, index: $index',
-                          );
-                        }
+                        final row = state.rows[index];
 
-                        final database = context.read<DatabaseRepository>();
+                        return EditableListTile(
+                          icon: Icons.delete_outline,
+                          initialContents: row.contents,
+                          onRemove: () async => _removeTodoRow(row),
+                          onContentsChanged: (value) async {
+                            final database = context.read<DatabaseRepository>();
 
-                        return ListTile(
-                          trailing: GestureDetector(
-                            child: Icon(
-                              Icons.delete_outline,
-                              color: Theme.of(context).listTileTheme.iconColor,
-                            ),
-                            onTap: () {
-                              final authentication =
-                                  context.read<AuthenticationRepository>();
-                              final todos = context.read<TodoRepository>();
-
-                              unawaited(
-                                todos.removeRow(
-                                  authentication: authentication,
-                                  row: row,
-                                ),
-                              );
-                            },
-                          ),
-                          title: TextField(
-                            controller: TextEditingController(
-                              text: row.contents,
-                            ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                            ),
-                            onChanged: (value) {
-                              databaseTransaction ??=
-                                  database.database.beginWrite();
-
-                              row.contents = value;
-                            },
-                            onSubmitted: (value) {
-                              if (databaseTransaction == null) {
-                                return;
-                              }
-
-                              databaseTransaction!.commit();
-                              databaseTransaction = null;
-                            },
-                            onTapOutside: (event) {
-                              if (databaseTransaction == null) {
-                                return;
-                              }
-
-                              databaseTransaction!.commit();
-                              databaseTransaction = null;
-                            },
-                            onEditingComplete: () {
-                              if (databaseTransaction == null) {
-                                return;
-                              }
-
-                              databaseTransaction!.commit();
-                              databaseTransaction = null;
-                            },
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                          tileColor: Theme.of(context).listTileTheme.tileColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
+                            _transaction ??=
+                                await database.realm.beginWriteAsync();
+                            row.contents = value;
+                          },
+                          onContentsSubmitted: (event) async {
+                            await _transaction?.commitAsync();
+                            _transaction = null;
+                          },
                         );
                       },
                     );
@@ -154,18 +109,7 @@ class _TodoPageState extends State<TodoPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () {
-                        final authentication =
-                            context.read<AuthenticationRepository>();
-                        final todos = context.read<TodoRepository>();
-
-                        unawaited(
-                          todos.addRow(
-                            authentication: authentication,
-                            todo: widget._todo,
-                          ),
-                        );
-                      },
+                      onPressed: _addTodoRow,
                       child: const Text('Add Item'),
                     ),
                     const SizedBox(width: 10),
@@ -180,4 +124,10 @@ class _TodoPageState extends State<TodoPage> {
           ),
         ),
       );
+
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    await _transaction?.commitAsync();
+  }
 }

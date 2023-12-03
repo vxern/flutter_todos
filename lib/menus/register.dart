@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sprint/sprint.dart';
 
 import 'package:flutter_todos/repositories/authentication.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -22,13 +23,11 @@ class _RegisterPageState extends State<RegisterPage> {
   String? nickname;
   late String password;
 
-  Future<void> register() async {
+  Future<void> _register() async {
+    final messenger = ScaffoldMessenger.of(context);
     final authentication = context.read<AuthenticationRepository>();
 
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(const SnackBar(content: Text('Registering...')));
-
+    messenger.showSnackBar(const SnackBar(content: Text('Registering...')));
     log.info('Registering account for $username...');
 
     try {
@@ -38,24 +37,43 @@ class _RegisterPageState extends State<RegisterPage> {
         password: password,
       );
     } on AuthenticationException catch (exception) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(SnackBar(content: Text(exception.message)));
-
+      messenger.showSnackBar(SnackBar(content: Text(exception.message)));
       log.warn('Failed to register: $exception');
-
+      return;
+    } on ResourceException catch (exception) {
+      messenger.showSnackBar(SnackBar(content: Text(exception.message)));
+      log.severe(exception);
       return;
     }
 
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(const SnackBar(content: Text('Registered successfully.')));
-
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Registered successfully.')),
+    );
     log.success('Account registered for $username.');
 
     await Future<void>.delayed(const Duration(seconds: 1));
 
-    context.goNamed('login');
+    if (context.mounted) {
+      context.goNamed('login');
+    }
+  }
+
+  Future<void> _onFormSubmit() async {
+    final state = _formKey.currentState;
+    if (state == null) {
+      return;
+    }
+
+    if (!state.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in the correct data before submitting.'),
+        ),
+      );
+      return;
+    }
+
+    await _register();
   }
 
   @override
@@ -107,21 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () async {
-                          if (!(_formKey.currentState?.validate() ?? false)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please fill in the correct data before '
-                                  'submitting.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          await register();
-                        },
+                        onPressed: _onFormSubmit,
                         child: const Text('Register'),
                       ),
                       Container(width: 10),

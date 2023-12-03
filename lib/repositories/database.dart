@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:realm/realm.dart' as realm;
-import 'package:sprint/sprint.dart';
+import 'package:flutter/foundation.dart';
+
+import 'package:realm/realm.dart';
 import 'package:universal_io/io.dart';
 
 import 'package:flutter_todos/constants.dart' as constants;
+import 'package:flutter_todos/cubits.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 import 'package:flutter_todos/structs/account.dart';
 
-final _schemas = List<realm.SchemaObject>.unmodifiable([
+final _schemas = List<SchemaObject>.unmodifiable([
   Account.schema,
   Profile.schema,
   Todos.schema,
@@ -15,45 +16,85 @@ final _schemas = List<realm.SchemaObject>.unmodifiable([
   TodoRow.schema,
 ]);
 
-class DatabaseRepository {
-  final Sprint log;
+class DatabaseRepository extends Repository {
+  static DatabaseRepository? _instance;
 
-  final realm.Realm database;
+  final Directory directory;
+  Realm? _realm;
 
-  DatabaseRepository._({required this.log, required this.database});
+  /// ! Throws a [StateError] if [DatabaseRepository] has not been initialised.
+  Realm get realm {
+    if (_realm == null) {
+      throw StateError('Attempted to access realm before initialisation.');
+    }
 
-  factory DatabaseRepository.create({required Directory directory}) {
-    final log = Sprint('Database');
-
-    final path = '${directory.path}/${constants.databaseFile}';
-
-    log
-      ..info('Opening database...')
-      ..debug('Database location: $path');
-
-    final configuration = realm.Configuration.local(
-      _schemas,
-      path: path,
-      // TODO(vxern): ONLY IN DEBUG.
-      shouldDeleteIfMigrationNeeded: true,
-    );
-    final database = realm.Realm(configuration);
-
-    log.success('Database opened.');
-
-    return DatabaseRepository._(log: log, database: database);
+    return _realm!;
   }
 
-  static RepositoryProvider<DatabaseRepository> getProvider({
-    required Directory directory,
-    required Widget child,
-  }) =>
-      RepositoryProvider.value(
-        value: DatabaseRepository.create(directory: directory),
-        child: child,
+  factory DatabaseRepository.singleton({required Directory directory}) {
+    if (_instance != null) {
+      return _instance!;
+    }
+
+    return _instance = DatabaseRepository.internal(directory: directory);
+  }
+
+  // * Visible for testing.
+  DatabaseRepository.internal({required this.directory})
+      : super(name: 'DatabaseRepository');
+
+  // * Visible for testing.
+  Realm openRealm({required String path}) => Realm(
+        Configuration.local(
+          _schemas,
+          path: path,
+          shouldDeleteIfMigrationNeeded: kDebugMode,
+        ),
       );
 
+  /// ! Throws:
+  /// - ! [InitialisationException] upon failing to initialise.
+  /// - ! (propagated) [StateError] if the repository is disposed.
+  /// - ! (propagated) [StateError] if the repository has already been
+  ///   ! initialised.
+  @override
+  Future<void> initialise() async {
+    await super.initialise();
+
+    initialisationCubit.declareInitialising();
+    log.info('Opening database...');
+
+    final path = '${directory.path}/${constants.databaseFile}';
+    log.debug('Database location: $path');
+
+    if (_realm == null) {
+      try {
+        _realm = openRealm(path: path);
+      } on FileSystemException catch (exception) {
+        initialisationCubit.declareFailed();
+        log
+          ..severe('Unable to access Realm database file. Missing permissions?')
+          ..severe(exception);
+        throw const InitialisationException();
+      } on RealmException catch (exception) {
+        initialisationCubit.declareFailed();
+
+        log
+          ..fatal('Failed to open Realm database file.')
+          ..fatal(exception);
+
+        throw const InitialisationException();
+      }
+    }
+
+    initialisationCubit.declareInitialised(value: ());
+    log.success('Database opened.');
+  }
+
+  @override
   Future<void> dispose() async {
-    database.close();
+    await super.dispose();
+
+    _realm?.close();
   }
 }

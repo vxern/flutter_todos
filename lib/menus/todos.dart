@@ -6,10 +6,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:realm/realm.dart';
 
-import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/repositories/database.dart';
 import 'package:flutter_todos/repositories/todos.dart';
 import 'package:flutter_todos/structs/account.dart';
+import 'package:flutter_todos/widgets/editable_list_tile.dart';
 
 class TodosState {
   final List<Todo> entries;
@@ -30,13 +30,34 @@ class TodosCubit extends Cubit<TodosState> {
   Future<void> close() async => Future.wait([super.close(), _changes.cancel()]);
 }
 
-class TodosPage extends StatelessWidget {
+class TodosPage extends StatefulWidget {
   final TodosCubit cubit;
 
   TodosPage({required Todos todos, super.key})
       : cubit = TodosCubit(entries: todos.entries);
 
-  Transaction? databaseTransaction;
+  @override
+  State<TodosPage> createState() => _TodosPageState();
+}
+
+class _TodosPageState extends State<TodosPage> {
+  Transaction? _transaction;
+
+  Future<void> _addTodo() async {
+    final todos = context.read<TodoRepository>();
+
+    final todo = await todos.addTodo();
+
+    if (context.mounted) {
+      context.go('/todo/${todo.id}');
+    }
+  }
+
+  Future<void> _removeTodo(Todo todo) async {
+    final todos = context.read<TodoRepository>();
+
+    await todos.removeTodo(todo: todo);
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -47,7 +68,7 @@ class TodosPage extends StatelessWidget {
             children: [
               Expanded(
                 child: BlocBuilder<TodosCubit, TodosState>(
-                  bloc: cubit,
+                  bloc: widget.cubit,
                   builder: (context, state) {
                     if (state.entries.isEmpty) {
                       return const Text(
@@ -61,85 +82,23 @@ class TodosPage extends StatelessWidget {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 10),
                       itemBuilder: (context, index) {
-                        final Todo todo;
-                        try {
-                          todo = state.entries[index];
-                        } on StateError {
-                          throw StateError(
-                            'Attempted to access todo using an invalid index. '
-                            'Todo count: ${state.entries.length}, index: '
-                            '$index',
-                          );
-                        }
+                        final todo = state.entries[index];
 
-                        final database = context.read<DatabaseRepository>();
+                        return EditableListTile(
+                          icon: Icons.delete_outline,
+                          initialContents: todo.title,
+                          onRemove: () async => _removeTodo(todo),
+                          onContentsChanged: (value) async {
+                            final database = context.read<DatabaseRepository>();
+                            _transaction ??=
+                                await database.realm.beginWriteAsync();
 
-                        return GestureDetector(
-                          child: ListTile(
-                            trailing: GestureDetector(
-                              child: Icon(
-                                Icons.delete_outline,
-                                color:
-                                    Theme.of(context).listTileTheme.iconColor,
-                              ),
-                              onTap: () {
-                                final authentication =
-                                    context.read<AuthenticationRepository>();
-                                final todos = context.read<TodoRepository>();
-
-                                unawaited(
-                                  todos.removeTodo(
-                                    authentication: authentication,
-                                    todo: todo,
-                                  ),
-                                );
-                              },
-                            ),
-                            title: TextField(
-                              controller: TextEditingController(
-                                text: todo.title,
-                              ),
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                              onChanged: (value) {
-                                databaseTransaction ??=
-                                    database.database.beginWrite();
-
-                                todo.title = value;
-                              },
-                              onSubmitted: (value) {
-                                if (databaseTransaction == null) {
-                                  return;
-                                }
-
-                                databaseTransaction!.commit();
-                                databaseTransaction = null;
-                              },
-                              onTapOutside: (event) {
-                                if (databaseTransaction == null) {
-                                  return;
-                                }
-
-                                databaseTransaction!.commit();
-                                databaseTransaction = null;
-                              },
-                              onEditingComplete: () {
-                                if (databaseTransaction == null) {
-                                  return;
-                                }
-
-                                databaseTransaction!.commit();
-                                databaseTransaction = null;
-                              },
-                              style: Theme.of(context).textTheme.labelLarge,
-                            ),
-                            tileColor:
-                                Theme.of(context).listTileTheme.tileColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                          ),
+                            todo.title = value;
+                          },
+                          onContentsSubmitted: (value) async {
+                            await _transaction?.commitAsync();
+                            _transaction = null;
+                          },
                           onTap: () => context.go('/todo/${todo.id}'),
                         );
                       },
@@ -153,17 +112,7 @@ class TodosPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () {
-                        final authentication =
-                            context.read<AuthenticationRepository>();
-                        final todos = context.read<TodoRepository>();
-
-                        unawaited(
-                          todos
-                              .addTodo(authentication: authentication)
-                              .then((todo) => context.go('/todo/${todo.id}')),
-                        );
-                      },
+                      onPressed: _addTodo,
                       child: const Text('Create'),
                     ),
                     const SizedBox(width: 10),
@@ -178,4 +127,10 @@ class TodosPage extends StatelessWidget {
           ),
         ),
       );
+
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    await _transaction?.commitAsync();
+  }
 }

@@ -1,143 +1,196 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:realm/realm.dart';
 import 'package:universal_io/io.dart';
 
 import 'package:flutter_todos/constants.dart' as constants;
 import 'package:flutter_todos/repositories/database.dart';
+import 'package:flutter_todos/repositories/repository.dart';
 import 'package:flutter_todos/structs/account.dart';
 
-class AuthenticationRepository {
-  final KdfAlgorithm _argon2;
-
-  static final int iterations = Platform.numberOfProcessors * 64;
-  static final int parallelism = Platform.numberOfProcessors;
-
+class AuthenticationRepository extends Repository with _Hashing {
+  // This is just a reference, not a managed resource, therefore do not dispose.
   final DatabaseRepository _database;
 
-  Account? account;
+  Account? _account;
 
-  bool get isAuthenticated => account != null;
+  /// ! Throws a [StateError] if [AuthenticationRepository] has not been
+  /// ! initialised.
+  Account get account {
+    if (_account == null) {
+      throw StateError('Attempted to access account before initialisation.');
+    }
 
-  bool get isNotAuthenticated => !isAuthenticated;
+    return _account!;
+  }
 
-  String get username => account!.username;
+  bool get isAuthenticated => _account != null;
 
-  AuthenticationRepository._({required DatabaseRepository database})
-      : _argon2 = Argon2id(
-          parallelism: parallelism,
-          memory: constants.hashingMemory,
-          iterations: iterations,
-          hashLength: constants.hashingHashLength,
-        ),
-        _database = database;
+  bool get isNotAuthenticated => _account == null;
 
-  factory AuthenticationRepository.create({
-    required DatabaseRepository database,
-  }) =>
-      AuthenticationRepository._(database: database);
+  AuthenticationRepository({required DatabaseRepository database})
+      : _database = database,
+        super(name: 'AuthenticationRepository', allowMultipleInitialise: true);
 
-  static RepositoryProvider<AuthenticationRepository> getProvider({
-    required DatabaseRepository database,
-  }) =>
-      RepositoryProvider.value(
-        value: AuthenticationRepository.create(database: database),
-      );
-
-  Future<String> _hash({required String password}) async {
-    final key = await _argon2.deriveKeyFromPassword(
-      nonce: utf8.encode(constants.hashingSaltPhrase),
-      password: password,
-    );
-
+  /// ! Throws [StateError] when failed to hash password.
+  // * Visible for testing.
+  @override
+  Future<String> deriveHash({required String password}) async {
     final String hash;
     try {
-      hash = utf8.decode(await key.extractBytes(), allowMalformed: true);
-    } on FormatException catch (exception) {
-      throw StateError('Could not decode hash bytes: $exception');
+      hash = await super.deriveHash(password: password);
+      // ignore: avoid_catches_without_on_clauses
+    } catch (problem) {
+      switch (problem) {
+        case UnsupportedError _ || FormatException _:
+          throw StateError('Failed to hash password.');
+      }
+
+      rethrow;
     }
 
     return hash;
   }
 
-  /// ⚠️ Throws:
-  /// - [AlreadyLoggedInException] if has already logged in previously.
-  /// - [AccountNotExistsException] if no account exists with the given
-  ///   username.
-  /// - [WrongPasswordException] if the passwords do not match.
+  /// ! Throws:
+  /// - ! [AlreadyLoggedInException] if has already logged in previously.
+  /// - ! [AccountNotExistsException] if no account exists with the given
+  ///   ! username.
+  /// - ! [WrongPasswordException] if the passwords do not match.
+  /// - ! [ResourceException] upon failure to hash the password.
+  /// - ! (propagated) [StateError] if the repository is disposed.
   Future<void> login({
     required String username,
     required String password,
   }) async {
+    verifyNotDisposed(message: 'Attempted to log in when disposed.');
+
     if (isAuthenticated) {
       throw const AlreadyLoggedInException();
     }
 
-    final database = _database.database;
+    initialisationCubit.declareInitialising();
 
-    final account = database.find<Account>(username);
+    final account = _database.realm.find<Account>(username);
     if (account == null) {
+      initialisationCubit.declareUninitialised();
       throw const AccountNotExistsException();
     }
 
-    final passwordHash = await _hash(password: password);
+    final String hash;
+    try {
+      hash = await deriveHash(password: password);
+    } on StateError catch (error) {
+      const message = 'Failed to hash password during login.';
+      log
+        ..severe(message)
+        ..severe(error);
+      initialisationCubit.declareFailed();
+      throw const ResourceException(message: message);
+    }
 
-    if (passwordHash != account.passwordHash) {
+    if (hash != account.passwordHash) {
+      initialisationCubit.declareUninitialised();
       throw const WrongPasswordException();
     }
 
-    this.account = account;
+    _account = account;
+    initialisationCubit.declareInitialised(value: ());
   }
 
-  /// ⚠️ Throws an [AccountAlreadyExistsException] if an account with that
-  /// username already exists.
+  /// ! Throws:
+  /// - ! [AccountAlreadyExistsException] if an account with that username
+  ///   ! already exists.
+  /// - ! [ResourceException] upon failure to create the account.
+  /// - ! [ResourceException] upon failure to hash the password.
+  /// - ! (propagated) [StateError] if the repository is disposed.
   Future<Account> register({
     required String username,
     required String? nickname,
     required String password,
   }) async {
-    final database = _database.database;
+    verifyNotDisposed(message: 'Attempted to register when disposed.');
 
-    if (database.find<Account>(username) != null) {
+    if (_database.realm.find<Account>(username) != null) {
       throw const AccountAlreadyExistsException();
     }
 
-    final passwordHash = await _hash(password: password);
+    final String hash;
+    try {
+      hash = await deriveHash(password: password);
+    } on StateError catch (error) {
+      const message = 'Failed to hash password during registration.';
+      log
+        ..fatal(message)
+        ..fatal(error);
+      throw const ResourceException(message: message);
+    }
 
     final Account account;
     try {
-      account = await database.writeAsync(
-        () => database.add<Account>(
+      account = await _database.realm.writeAsync(
+        () => _database.realm.add(
           Account(
             username,
-            passwordHash,
+            hash,
             profile: Profile(nickname: nickname),
             todos: Todos(),
           ),
         ),
       );
     } on RealmException catch (exception) {
-      throw StateError('Encountered unexpected realm exception: $exception');
+      log.severe(exception);
+      throw const ResourceException(message: 'Failed to save account.');
     }
 
     return account;
   }
 
-  /// ⚠️ Throws an [AlreadyLoggedOutException] if the user has already logged
-  /// out of their account.
   Future<void> logout() async {
-    if (account == null) {
-      throw const AlreadyLoggedOutException();
-    }
-
-    account = null;
+    await uninitialise();
+    _account = null;
   }
 
+  @override
   Future<void> dispose() async {
-    account = null;
+    await super.dispose();
+    _account = null;
+  }
+}
+
+mixin _Hashing {
+  static final _argon2 = Argon2id(
+    parallelism: Platform.numberOfProcessors * 2,
+    memory: constants.hashingMemory,
+    iterations: Platform.numberOfProcessors,
+    hashLength: constants.hashingHashLength,
+  );
+
+  /// ! Throws:
+  /// - ! [UnsupportedError] on not being able to read the key bytes.
+  /// - ! [FormatException] on not being able to decode bytes into a string.
+  Future<String> deriveHash({required String password}) async {
+    final key = await _argon2.deriveKey(
+      secretKey: SecretKey(utf8.encode(password)),
+      nonce: utf8.encode(constants.hashingSaltPhrase),
+    );
+
+    final List<int> bytes;
+    try {
+      bytes = await key.extractBytes();
+    } on UnsupportedError {
+      rethrow;
+    }
+
+    final String hash;
+    try {
+      hash = utf8.decode(bytes, allowMalformed: true);
+    } on FormatException {
+      rethrow;
+    }
+
+    return hash;
   }
 }
 
@@ -162,10 +215,6 @@ class AccountNotExistsException extends AuthenticationException {
 class WrongPasswordException extends AuthenticationException {
   const WrongPasswordException()
       : super(message: 'The passwords do not match.');
-}
-
-class AlreadyLoggedOutException extends AuthenticationException {
-  const AlreadyLoggedOutException() : super(message: 'Already logged out.');
 }
 
 class AccountAlreadyExistsException extends AuthenticationException {
