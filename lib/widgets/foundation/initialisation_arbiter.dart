@@ -37,6 +37,7 @@ class InitialisationArbiter extends StatelessWidget {
     required WidgetBuilder whenInitialising,
     required WidgetBuilderWithInitialiser whenFailed,
     required WidgetBuilder whenDone,
+    Key? key,
   }) {
     if (_instances.containsKey(name)) {
       return _instances[name]!;
@@ -48,6 +49,7 @@ class InitialisationArbiter extends StatelessWidget {
       whenInitialising: whenInitialising,
       whenFailed: whenFailed,
       whenDone: whenDone,
+      key: key,
     );
 
     _instances[name] = instance;
@@ -61,6 +63,7 @@ class InitialisationArbiter extends StatelessWidget {
     required this.whenInitialising,
     required this.whenFailed,
     required this.whenDone,
+    super.key,
   }) : assert(
           initialisers.isNotEmpty,
           'There must be at least one initialiser.',
@@ -84,6 +87,7 @@ class InitialisationArbiter extends StatelessWidget {
     required WidgetBuilder whenInitialising,
     required WidgetBuilderWithInitialiser whenFailed,
     required WidgetBuilder whenDone,
+    Key? key,
   }) =>
       InitialisationArbiter(
         name: name,
@@ -102,6 +106,7 @@ class InitialisationArbiter extends StatelessWidget {
         whenInitialising: whenInitialising,
         whenFailed: whenFailed,
         whenDone: whenDone,
+        key: key,
       );
 
   @override
