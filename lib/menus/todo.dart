@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_todos/widgets/editable_list_tile.dart';
 import 'package:go_router/go_router.dart';
 import 'package:realm/realm.dart';
 
@@ -79,61 +80,27 @@ class _TodoPageState extends State<TodoPage> {
 
                         final database = context.read<DatabaseRepository>();
 
-                        return ListTile(
-                          trailing: GestureDetector(
-                            child: Icon(
-                              Icons.delete_outline,
-                              color: Theme.of(context).listTileTheme.iconColor,
-                            ),
-                            onTap: () {
-                              final todos = context.read<TodoRepository>();
+                        return EditableListTile(
+                          icon: Icons.delete_outline,
+                          initialContents: row.contents,
+                          onRemove: () async {
+                            final todos = context.read<TodoRepository>();
 
-                              unawaited(todos.removeRow(row: row));
-                            },
-                          ),
-                          title: TextField(
-                            controller: TextEditingController(
-                              text: row.contents,
-                            ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                            ),
-                            onChanged: (value) {
-                              databaseTransaction ??=
-                                  database.realm.beginWrite();
+                            unawaited(todos.removeRow(row: row));
+                          },
+                          onContentsChanged: (value) {
+                            databaseTransaction ??= database.realm.beginWrite();
 
-                              row.contents = value;
-                            },
-                            onSubmitted: (value) {
-                              if (databaseTransaction == null) {
-                                return;
-                              }
+                            row.contents = value;
+                          },
+                          onContentsSubmitted: (event) {
+                            if (databaseTransaction == null) {
+                              return;
+                            }
 
-                              databaseTransaction!.commit();
-                              databaseTransaction = null;
-                            },
-                            onTapOutside: (event) {
-                              if (databaseTransaction == null) {
-                                return;
-                              }
-
-                              databaseTransaction!.commit();
-                              databaseTransaction = null;
-                            },
-                            onEditingComplete: () {
-                              if (databaseTransaction == null) {
-                                return;
-                              }
-
-                              databaseTransaction!.commit();
-                              databaseTransaction = null;
-                            },
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                          tileColor: Theme.of(context).listTileTheme.tileColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
+                            databaseTransaction!.commit();
+                            databaseTransaction = null;
+                          },
                         );
                       },
                     );
