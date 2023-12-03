@@ -9,7 +9,7 @@ class ApplicationRepository extends Repository {
 
   List<InitialisationCubit> get loaders => [directories.initialisationCubit];
 
-  factory ApplicationRepository({
+  factory ApplicationRepository.singleton({
     // * Visible for testing.
     DirectoriesLoader? directoriesLoader,
   }) {
@@ -17,12 +17,13 @@ class ApplicationRepository extends Repository {
       return _instance!;
     }
 
-    return _instance = ApplicationRepository._(
+    return _instance = ApplicationRepository.internal(
       directoriesLoader: directoriesLoader,
     );
   }
 
-  ApplicationRepository._({
+  // * Visible for testing.
+  ApplicationRepository.internal({
     // * Visible for testing.
     DirectoriesLoader? directoriesLoader,
   })  : directories = directoriesLoader ?? DirectoriesLoader(),

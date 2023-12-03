@@ -37,8 +37,9 @@ void main() {
       setUp(
         () {
           final directoriesLoader = MockDirectoryLoader();
-          application =
-              ApplicationRepository(directoriesLoader: directoriesLoader);
+          application = ApplicationRepository.internal(
+            directoriesLoader: directoriesLoader,
+          );
           stub(directoriesLoader);
         },
       );
@@ -122,8 +123,9 @@ void main() {
       late ApplicationRepository application;
 
       setUp(
-        () => application =
-            ApplicationRepository(directoriesLoader: directoriesLoader),
+        () => application = ApplicationRepository.internal(
+          directoriesLoader: directoriesLoader,
+        ),
       );
 
       test('disposes of the repository.', () async {

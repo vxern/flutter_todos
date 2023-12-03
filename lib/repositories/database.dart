@@ -31,15 +31,16 @@ class DatabaseRepository extends Repository {
     return _realm!;
   }
 
-  factory DatabaseRepository({required Directory directory}) {
+  factory DatabaseRepository.singleton({required Directory directory}) {
     if (_instance != null) {
       return _instance!;
     }
 
-    return _instance = DatabaseRepository._(directory: directory);
+    return _instance = DatabaseRepository.internal(directory: directory);
   }
 
-  DatabaseRepository._({required this.directory})
+  // * Visible for testing.
+  DatabaseRepository.internal({required this.directory})
       : super(name: 'DatabaseRepository');
 
   // * Visible for testing.

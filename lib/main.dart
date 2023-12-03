@@ -59,7 +59,7 @@ Widget bootstrap({required WidgetBuilder base}) => RepositoryProvider.value(
             // previous one being present.
             providers: [
               RepositoryProvider.value(
-                value: DatabaseRepository(
+                value: DatabaseRepository.singleton(
                   directory: context
                       .read<ApplicationRepository>()
                       .directories

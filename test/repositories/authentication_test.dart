@@ -37,7 +37,7 @@ class FaultyTestAuthenticationRepository extends AuthenticationRepository {
 }
 
 class TestDatabaseRepository extends DatabaseRepository {
-  TestDatabaseRepository({required super.directory});
+  TestDatabaseRepository({required super.directory}) : super.internal();
 
   @override
   Realm openRealm({required String path}) => MockRealm();

@@ -12,7 +12,8 @@ import '../matchers.dart';
 class MockRealm extends Mock implements Realm {}
 
 class TestDatabaseRepository extends DatabaseRepository {
-  TestDatabaseRepository({required super.directory});
+  TestDatabaseRepository({required Directory directory})
+      : super.internal(directory: directory);
 
   @override
   Realm openRealm({required String path}) => MockRealm();
@@ -22,9 +23,9 @@ class FaultyTestDatabaseRepository extends DatabaseRepository {
   final Never Function() thrower;
 
   FaultyTestDatabaseRepository({
-    required super.directory,
+    required Directory directory,
     required this.thrower,
-  });
+  }) : super.internal(directory: directory);
 
   @override
   Realm openRealm({required String path}) {
@@ -38,7 +39,8 @@ class VariablyFaultyTestDatabaseRepository extends DatabaseRepository {
   VariablyFaultyTestDatabaseRepository({
     required super.directory,
     required Realm Function() openRealm,
-  }) : openRealm_ = openRealm;
+  })  : openRealm_ = openRealm,
+        super.internal();
 
   @override
   Realm openRealm({required String path}) => openRealm_();
