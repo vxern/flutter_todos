@@ -44,6 +44,10 @@ class _LoginPageState extends State<LoginPage> {
       messenger.showSnackBar(SnackBar(content: Text(exception.message)));
       log.warn('Failed to log in: $exception');
       return;
+    } on ResourceException catch (exception) {
+      messenger.showSnackBar(SnackBar(content: Text(exception.message)));
+      log.severe(exception);
+      return;
     }
 
     messenger.showSnackBar(
