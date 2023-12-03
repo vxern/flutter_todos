@@ -1,7 +1,6 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_todos/cubits.dart';
 import 'package:sprint/sprint.dart';
 
+import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/utils.dart';
 
 abstract class ApplicationLoader<T>

@@ -41,13 +41,13 @@ void main() {
   );
 
   group('InitialisationCubit', () {
-    blocTest(
+    blocTest<InitialisationCubit, InitialisationState>(
       'has UninitialisedState as the default state.',
       build: InitialisationCubit.new,
       verify: (cubit) => expect(cubit.state, isA<UninitialisedState>()),
     );
 
-    blocTest(
+    blocTest<InitialisationCubit, InitialisationState>(
       'emits [] when nothing is added.',
       build: InitialisationCubit.new,
       expect: () => const <()>[],
@@ -56,8 +56,8 @@ void main() {
     // Since [UninitialisedState] is the default state and unchanged states are
     // not emitted, we need to change the state away from and then back towards
     // [UninitialisedState].
-    blocTest(
-      'emits [InitialisedState(), UninitialisedState()] when'
+    blocTest<InitialisationCubit, InitialisationState>(
+      'emits [InitialisedState(), UninitialisedState()] when '
       '[declareInitialised(), declareUninitialised()] are called.',
       build: InitialisationCubit.new,
       act: (cubit) => cubit
@@ -66,21 +66,21 @@ void main() {
       expect: () => [const InitialisingState(), const UninitialisedState()],
     );
 
-    blocTest(
+    blocTest<InitialisationCubit, InitialisationState>(
       'emits [InitialisingState] when [declareInitialising()] is called.',
       build: InitialisationCubit.new,
       act: (cubit) => cubit.declareInitialising(),
       expect: () => [const InitialisingState()],
     );
 
-    blocTest(
+    blocTest<InitialisationCubit, InitialisationState>(
       'emits [InitialisedState] when [declareInitialised()] is called.',
       build: InitialisationCubit.new,
       act: (cubit) => cubit.declareInitialised(value: ()),
       expect: () => [const InitialisedState(value: ())],
     );
 
-    blocTest(
+    blocTest<InitialisationCubit, InitialisationState>(
       'emits [InitialisationFailedState] when [declareFailed()] is called.',
       build: InitialisationCubit.new,
       act: (cubit) => cubit.declareFailed(),

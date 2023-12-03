@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_todos/repositories/loaders/loader.dart';
 
+import 'package:flutter_todos/repositories/loaders/loader.dart';
 import '../../matchers.dart';
 
 class TestApplicationLoader extends ApplicationLoader<()> {

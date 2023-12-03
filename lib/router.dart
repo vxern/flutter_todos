@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_todos/main.dart';
-import 'package:flutter_todos/widgets/foundation/initialisation_arbiter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter_todos/menus/home.dart';
@@ -12,6 +10,7 @@ import 'package:flutter_todos/menus/todo.dart';
 import 'package:flutter_todos/menus/todos.dart';
 import 'package:flutter_todos/repositories/authentication.dart';
 import 'package:flutter_todos/repositories/todos.dart';
+import 'package:flutter_todos/widgets/foundation/initialisation_arbiter.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _authenticationNavigatorKey = GlobalKey<NavigatorState>();
@@ -28,27 +27,28 @@ final router = GoRouter(
     ),
     ShellRoute(
       navigatorKey: _todosNavigatorKey,
-      builder: arbiterGuard((context, child) => InitialisationArbiter(
-            name: #todos,
-            initialisers: [context.read<TodoRepository>().initialisationCubit],
-            initialise: () async {
-              final todos = context.read<TodoRepository>();
-              if (todos.initialisationCubit.isInitialised) {
-                return;
-              }
-              await todos.initialise();
-            },
-            whenInitialising: (context) => const MaterialApp(
-              home: Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              ),
+      builder: arbiterGuard(
+        (context, child) => InitialisationArbiter(
+          name: #todos,
+          initialisers: [context.read<TodoRepository>().initialisationCubit],
+          initialise: () async {
+            final todos = context.read<TodoRepository>();
+            if (todos.initialisationCubit.isInitialised) {
+              return;
+            }
+            await todos.initialise();
+          },
+          whenInitialising: (context) => const MaterialApp(
+            home: Scaffold(
+              body: Center(child: CircularProgressIndicator()),
             ),
-            whenFailed: (context, initialiser) => const MaterialApp(
-              home:
-                  Scaffold(body: Center(child: Text('Failed to load todos.'))),
-            ),
-            whenDone: (context) => child,
-          )),
+          ),
+          whenFailed: (context, initialiser) => const MaterialApp(
+            home: Scaffold(body: Center(child: Text('Failed to load todos.'))),
+          ),
+          whenDone: (context) => child,
+        ),
+      ),
       routes: [
         GoRoute(
           name: 'todos',
@@ -59,7 +59,8 @@ final router = GoRouter(
             final todoList = authentication.account.todos;
             if (todoList == null) {
               throw StateError(
-                  'Attempted to access todos when no todos exist.');
+                'Attempted to access todos when no todos exist.',
+              );
             }
 
             return TodosPage(todos: todoList);

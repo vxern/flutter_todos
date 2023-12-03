@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_todos/cubits.dart';
 
+import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/repository.dart';
 
 typedef WidgetBuilderWithInitialiser = Widget Function(

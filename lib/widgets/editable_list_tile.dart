@@ -15,12 +15,12 @@ class EditableListTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   const EditableListTile({
-    super.key,
     required this.icon,
     required String initialContents,
     required this.onRemove,
     required this.onContentsChanged,
     required this.onContentsSubmitted,
+    super.key,
     this.onTap,
   }) : _initialContents = initialContents;
 
