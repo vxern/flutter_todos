@@ -43,7 +43,7 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  Transaction? databaseTransaction;
+  Transaction? _transaction;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -68,17 +68,7 @@ class _TodoPageState extends State<TodoPage> {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 10),
                       itemBuilder: (context, index) {
-                        final TodoRow row;
-                        try {
-                          row = state.rows[index];
-                        } on StateError {
-                          throw StateError(
-                            'Attempted to access row using an invalid index. Row '
-                            'count: ${state.rows.length}, index: $index',
-                          );
-                        }
-
-                        final database = context.read<DatabaseRepository>();
+                        final row = state.rows[index];
 
                         return EditableListTile(
                           icon: Icons.delete_outline,
@@ -86,20 +76,18 @@ class _TodoPageState extends State<TodoPage> {
                           onRemove: () async {
                             final todos = context.read<TodoRepository>();
 
-                            unawaited(todos.removeRow(row: row));
+                            await todos.removeRow(row: row);
                           },
-                          onContentsChanged: (value) {
-                            databaseTransaction ??= database.realm.beginWrite();
+                          onContentsChanged: (value) async {
+                            final database = context.read<DatabaseRepository>();
 
+                            _transaction ??=
+                                await database.realm.beginWriteAsync();
                             row.contents = value;
                           },
-                          onContentsSubmitted: (event) {
-                            if (databaseTransaction == null) {
-                              return;
-                            }
-
-                            databaseTransaction!.commit();
-                            databaseTransaction = null;
+                          onContentsSubmitted: (event) async {
+                            await _transaction?.commitAsync();
+                            _transaction = null;
                           },
                         );
                       },
@@ -113,10 +101,10 @@ class _TodoPageState extends State<TodoPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         final todos = context.read<TodoRepository>();
 
-                        unawaited(todos.addRow(todo: widget._todo));
+                        await todos.addRow(todo: widget._todo);
                       },
                       child: const Text('Add Item'),
                     ),
@@ -132,4 +120,10 @@ class _TodoPageState extends State<TodoPage> {
           ),
         ),
       );
+
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    await _transaction?.commitAsync();
+  }
 }

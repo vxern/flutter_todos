@@ -30,13 +30,18 @@ class TodosCubit extends Cubit<TodosState> {
   Future<void> close() async => Future.wait([super.close(), _changes.cancel()]);
 }
 
-class TodosPage extends StatelessWidget {
+class TodosPage extends StatefulWidget {
   final TodosCubit cubit;
 
   TodosPage({required Todos todos, super.key})
       : cubit = TodosCubit(entries: todos.entries);
 
-  Transaction? databaseTransaction;
+  @override
+  State<TodosPage> createState() => _TodosPageState();
+}
+
+class _TodosPageState extends State<TodosPage> {
+  Transaction? _transaction;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -47,7 +52,7 @@ class TodosPage extends StatelessWidget {
             children: [
               Expanded(
                 child: BlocBuilder<TodosCubit, TodosState>(
-                  bloc: cubit,
+                  bloc: widget.cubit,
                   builder: (context, state) {
                     if (state.entries.isEmpty) {
                       return const Text(
@@ -61,18 +66,7 @@ class TodosPage extends StatelessWidget {
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 10),
                       itemBuilder: (context, index) {
-                        final Todo todo;
-                        try {
-                          todo = state.entries[index];
-                        } on StateError {
-                          throw StateError(
-                            'Attempted to access todo using an invalid index. '
-                            'Todo count: ${state.entries.length}, index: '
-                            '$index',
-                          );
-                        }
-
-                        final database = context.read<DatabaseRepository>();
+                        final todo = state.entries[index];
 
                         return EditableListTile(
                           icon: Icons.delete_outline,
@@ -80,20 +74,18 @@ class TodosPage extends StatelessWidget {
                           onRemove: () async {
                             final todos = context.read<TodoRepository>();
 
-                            unawaited(todos.removeTodo(todo: todo));
+                            await todos.removeTodo(todo: todo);
                           },
-                          onContentsChanged: (value) {
-                            databaseTransaction ??= database.realm.beginWrite();
+                          onContentsChanged: (value) async {
+                            final database = context.read<DatabaseRepository>();
 
+                            _transaction ??=
+                                await database.realm.beginWriteAsync();
                             todo.title = value;
                           },
-                          onContentsSubmitted: (value) {
-                            if (databaseTransaction == null) {
-                              return;
-                            }
-
-                            databaseTransaction!.commit();
-                            databaseTransaction = null;
+                          onContentsSubmitted: (value) async {
+                            await _transaction?.commitAsync();
+                            _transaction = null;
                           },
                           onTap: () => context.go('/todo/${todo.id}'),
                         );
@@ -108,14 +100,14 @@ class TodosPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         final todos = context.read<TodoRepository>();
 
-                        unawaited(
-                          todos
-                              .addTodo()
-                              .then((todo) => context.go('/todo/${todo.id}')),
-                        );
+                        final todo = await todos.addTodo();
+
+                        if (context.mounted) {
+                          context.go('/todo/${todo.id}');
+                        }
                       },
                       child: const Text('Create'),
                     ),
@@ -131,4 +123,10 @@ class TodosPage extends StatelessWidget {
           ),
         ),
       );
+
+  @override
+  Future<void> dispose() async {
+    super.dispose();
+    await _transaction?.commitAsync();
+  }
 }
