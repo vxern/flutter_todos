@@ -283,7 +283,9 @@ void main() {
             authentication.initialisationCubit.stream,
             emitsInOrder([
               isA<InitialisingState>(),
-              isA<InitialisationFailedState>(),
+              isA<UninitialisedState>(),
+              isA<InitialisingState>(),
+              isA<UninitialisedState>(),
               isA<InitialisingState>(),
               isA<InitialisedState>(),
             ]),
@@ -303,6 +305,14 @@ void main() {
         final account = MockAccount();
         stubAccount(account);
         stubFinder<Account>(database.realm, () => account);
+
+        await expectLater(
+          () async => authentication.login(
+            username: username,
+            password: 'invalid_password',
+          ),
+          throwsA(isA<WrongPasswordException>()),
+        );
 
         await expectLater(
           authentication.login(

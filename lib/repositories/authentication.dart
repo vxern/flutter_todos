@@ -74,7 +74,7 @@ class AuthenticationRepository extends Repository with _Hashing {
 
     final account = _database.realm.find<Account>(username);
     if (account == null) {
-      initialisationCubit.declareFailed();
+      initialisationCubit.declareUninitialised();
       throw const AccountNotExistsException();
     }
 
@@ -86,11 +86,12 @@ class AuthenticationRepository extends Repository with _Hashing {
       log
         ..severe(message)
         ..severe(error);
+      initialisationCubit.declareFailed();
       throw const ResourceException(message: message);
     }
 
     if (hash != account.passwordHash) {
-      initialisationCubit.declareFailed();
+      initialisationCubit.declareUninitialised();
       throw const WrongPasswordException();
     }
 
