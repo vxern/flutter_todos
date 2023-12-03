@@ -18,6 +18,15 @@ void main() => runApp(
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.indigo,
             ),
+          ).copyWith(
+            listTileTheme: ListTileThemeData(
+              tileColor: Colors.indigo,
+              textColor: Colors.white,
+              iconColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
           ),
         ),
       ),

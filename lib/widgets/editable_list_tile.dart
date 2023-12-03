@@ -99,33 +99,29 @@ class _EditableListTileState extends State<EditableListTile> {
                   onTap: state is EditingState
                       ? _onCancelEditing
                       : _onStartEditing,
-                  child: Icon(
-                    state is EditingState ? Icons.close : Icons.edit,
-                    color: Theme.of(context).listTileTheme.iconColor,
-                  ),
+                  child: Icon(state is EditingState ? Icons.close : Icons.edit),
                 ),
                 const SizedBox(width: 4),
                 GestureDetector(
                   onTap: widget.onRemove,
-                  child: Icon(
-                    widget.icon,
-                    color: Theme.of(context).listTileTheme.iconColor,
-                  ),
+                  child: Icon(widget.icon),
                 ),
               ],
             ),
             title: TextField(
               controller: widget._textEditingController,
-              decoration: const InputDecoration(border: InputBorder.none),
               onChanged: widget.onContentsChanged,
               onTapOutside: (value) => _onFinishEditing(),
               onSubmitted: (value) => _onFinishEditing(),
-              style: Theme.of(context).textTheme.labelLarge,
+              style: TextStyle(
+                color: Theme.of(context).listTileTheme.textColor,
+                decoration: state is EditingState
+                    ? TextDecoration.underline
+                    : TextDecoration.none,
+                decorationThickness: .4,
+              ),
               enabled: editCubit.state is EditingState,
             ),
-            tileColor: Theme.of(context).listTileTheme.tileColor,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             onTap: widget.onTap,
           ),
         ),
