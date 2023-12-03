@@ -28,7 +28,7 @@ void main() => runApp(
     );
 
 Widget bootstrap({required WidgetBuilder base}) => RepositoryProvider.value(
-      value: ApplicationRepository(),
+      value: ApplicationRepository.internal(),
       child: Builder(
         builder: (context) => InitialisationArbiter(
           name: #application,
