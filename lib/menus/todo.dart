@@ -45,6 +45,18 @@ class TodoPage extends StatefulWidget {
 class _TodoPageState extends State<TodoPage> {
   Transaction? _transaction;
 
+  Future<void> _addTodoRow() async {
+    final todos = context.read<TodoRepository>();
+
+    await todos.addRow(todo: widget._todo);
+  }
+
+  Future<void> _removeTodoRow(TodoRow row) async {
+    final todos = context.read<TodoRepository>();
+
+    await todos.removeRow(row: row);
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text(widget._todo.title)),
@@ -73,11 +85,7 @@ class _TodoPageState extends State<TodoPage> {
                         return EditableListTile(
                           icon: Icons.delete_outline,
                           initialContents: row.contents,
-                          onRemove: () async {
-                            final todos = context.read<TodoRepository>();
-
-                            await todos.removeRow(row: row);
-                          },
+                          onRemove: () async => _removeTodoRow(row),
                           onContentsChanged: (value) async {
                             final database = context.read<DatabaseRepository>();
 
@@ -101,11 +109,7 @@ class _TodoPageState extends State<TodoPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () async {
-                        final todos = context.read<TodoRepository>();
-
-                        await todos.addRow(todo: widget._todo);
-                      },
+                      onPressed: _addTodoRow,
                       child: const Text('Add Item'),
                     ),
                     const SizedBox(width: 10),

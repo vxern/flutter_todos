@@ -23,7 +23,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String? nickname;
   late String password;
 
-  Future<void> register() async {
+  Future<void> _register() async {
     final messenger = ScaffoldMessenger.of(context);
     final authentication = context.read<AuthenticationRepository>();
 
@@ -56,6 +56,24 @@ class _RegisterPageState extends State<RegisterPage> {
     if (context.mounted) {
       context.goNamed('login');
     }
+  }
+
+  Future<void> _onFormSubmit() async {
+    final state = _formKey.currentState;
+    if (state == null) {
+      return;
+    }
+
+    if (!state.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in the correct data before submitting.'),
+        ),
+      );
+      return;
+    }
+
+    await _register();
   }
 
   @override
@@ -107,21 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () async {
-                          if (!(_formKey.currentState?.validate() ?? false)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please fill in the correct data before '
-                                  'submitting.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          await register();
-                        },
+                        onPressed: _onFormSubmit,
                         child: const Text('Register'),
                       ),
                       Container(width: 10),

@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   late String username;
   late String password;
 
-  Future<void> login() async {
+  Future<void> _login() async {
     final messenger = ScaffoldMessenger.of(context);
     final authentication = context.read<AuthenticationRepository>();
 
@@ -60,6 +60,24 @@ class _LoginPageState extends State<LoginPage> {
     if (context.mounted) {
       context.goNamed('todos');
     }
+  }
+
+  Future<void> _onFormSubmit() async {
+    final state = _formKey.currentState;
+    if (state == null) {
+      return;
+    }
+
+    if (!state.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in the correct data before submitting.'),
+        ),
+      );
+      return;
+    }
+
+    await _login();
   }
 
   @override
@@ -100,20 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () {
-                          if (!(_formKey.currentState?.validate() ?? false)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please fill in the correct data before submitting.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          unawaited(login());
-                        },
+                        onPressed: _onFormSubmit,
                         child: const Text('Login'),
                       ),
                       Container(width: 10),

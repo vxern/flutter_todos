@@ -43,6 +43,22 @@ class TodosPage extends StatefulWidget {
 class _TodosPageState extends State<TodosPage> {
   Transaction? _transaction;
 
+  Future<void> _addTodo() async {
+    final todos = context.read<TodoRepository>();
+
+    final todo = await todos.addTodo();
+
+    if (context.mounted) {
+      context.go('/todo/${todo.id}');
+    }
+  }
+
+  Future<void> _removeTodo(Todo todo) async {
+    final todos = context.read<TodoRepository>();
+
+    await todos.removeTodo(todo: todo);
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Todos')),
@@ -71,16 +87,12 @@ class _TodosPageState extends State<TodosPage> {
                         return EditableListTile(
                           icon: Icons.delete_outline,
                           initialContents: todo.title,
-                          onRemove: () async {
-                            final todos = context.read<TodoRepository>();
-
-                            await todos.removeTodo(todo: todo);
-                          },
+                          onRemove: () async => _removeTodo(todo),
                           onContentsChanged: (value) async {
                             final database = context.read<DatabaseRepository>();
-
                             _transaction ??=
                                 await database.realm.beginWriteAsync();
+
                             todo.title = value;
                           },
                           onContentsSubmitted: (value) async {
@@ -100,15 +112,7 @@ class _TodosPageState extends State<TodosPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton(
-                      onPressed: () async {
-                        final todos = context.read<TodoRepository>();
-
-                        final todo = await todos.addTodo();
-
-                        if (context.mounted) {
-                          context.go('/todo/${todo.id}');
-                        }
-                      },
+                      onPressed: _addTodo,
                       child: const Text('Create'),
                     ),
                     const SizedBox(width: 10),
