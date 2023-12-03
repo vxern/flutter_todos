@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:universal_io/io.dart';
 
 import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/application.dart';
@@ -11,7 +10,6 @@ import '../matchers.dart';
 
 class MockDirectoryLoader extends Mock implements DirectoriesLoader {}
 
-final directories = Directories(documents: Directory('/'));
 final directoriesLoader = DirectoriesLoader();
 
 void stub(DirectoriesLoader directoriesLoader) {
@@ -22,7 +20,7 @@ void stub(DirectoriesLoader directoriesLoader) {
 }
 
 void stubLoaderWithSuccess(DirectoriesLoader directoriesLoader) {
-  when(directoriesLoader.load).thenAnswer((_) => Future.value(directories));
+  when(directoriesLoader.load).thenAnswer((_) => Future.value());
 }
 
 void stubLoaderWithFailure(DirectoriesLoader directoriesLoader) {

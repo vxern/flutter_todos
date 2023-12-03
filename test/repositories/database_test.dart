@@ -9,11 +9,11 @@ import 'package:flutter_todos/cubits.dart';
 import 'package:flutter_todos/repositories/database.dart';
 import '../matchers.dart';
 
+// ignore: avoid_implementing_value_types
 class MockRealm extends Mock implements Realm {}
 
 class TestDatabaseRepository extends DatabaseRepository {
-  TestDatabaseRepository({required Directory directory})
-      : super.internal(directory: directory);
+  TestDatabaseRepository({required super.directory}) : super.internal();
 
   @override
   Realm openRealm({required String path}) => MockRealm();
@@ -23,9 +23,9 @@ class FaultyTestDatabaseRepository extends DatabaseRepository {
   final Never Function() thrower;
 
   FaultyTestDatabaseRepository({
-    required Directory directory,
+    required super.directory,
     required this.thrower,
-  }) : super.internal(directory: directory);
+  }) : super.internal();
 
   @override
   Realm openRealm({required String path}) {

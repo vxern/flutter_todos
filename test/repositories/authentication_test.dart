@@ -11,6 +11,7 @@ import 'package:flutter_todos/repositories/database.dart';
 import 'package:flutter_todos/structs/account.dart';
 import '../matchers.dart';
 
+// ignore: avoid_implementing_value_types
 class MockRealm extends Mock implements Realm {}
 
 class MockAccount extends Mock implements Account {}
@@ -64,6 +65,7 @@ void stubAdder<T extends RealmObject>(Realm realm, T object) {
 }
 
 void stubWriter<T extends RealmObject>(Realm realm, T Function() valueBuilder) {
+  // ignore: discarded_futures
   when(() => realm.writeAsync<T>(any(), any())).thenAnswer(
     (invocation) async => valueBuilder(),
   );
@@ -165,14 +167,14 @@ void main() {
     });
 
     group('login()', () {
-      test('logs the user in.', () {
+      test('logs the user in.', () async {
         authentication = TestAuthenticationRepository(database: database);
 
         final account = MockAccount();
         stubAccount(account);
         stubFinder<Account>(database.realm, () => account);
 
-        expect(
+        await expectLater(
           authentication.login(username: username, password: password),
           completes,
         );
@@ -240,7 +242,7 @@ void main() {
 
       test(
         'throws a [ResourceException] upon failure to hash the password.',
-        () {
+        () async {
           authentication = FaultyTestAuthenticationRepository(
             database: database,
             thrower: () {
@@ -252,7 +254,7 @@ void main() {
           stubAccount(account);
           stubFinder<Account>(database.realm, () => account);
 
-          expect(
+          await expectLater(
             authentication.login(username: username, password: password),
             throwsResourceException,
           );
@@ -313,7 +315,7 @@ void main() {
     });
 
     group('register()', () {
-      test('registers the user.', () {
+      test('registers the user.', () async {
         authentication = TestAuthenticationRepository(database: database);
 
         final account = MockAccount();
@@ -322,7 +324,7 @@ void main() {
         stubAdder<Account>(database.realm, account);
         stubWriter<Account>(database.realm, () => account);
 
-        expect(
+        await expectLater(
           authentication.register(
             username: username,
             nickname: null,
@@ -335,7 +337,7 @@ void main() {
       test(
         'throws an [AccountAlreadyExistsException] when there already is an '
         'account with a given username.',
-        () {
+        () async {
           authentication = TestAuthenticationRepository(database: database);
 
           final account = MockAccount();
@@ -344,7 +346,7 @@ void main() {
           stubAdder<Account>(database.realm, account);
           stubWriter<Account>(database.realm, () => account);
 
-          expect(
+          await expectLater(
             authentication.register(
               username: username,
               nickname: null,
@@ -358,7 +360,7 @@ void main() {
       test(
         'throws a [FailedToRegisterException] when unable to write the changes '
         'to the database.',
-        () {
+        () async {
           authentication = TestAuthenticationRepository(database: database);
 
           final account = MockAccount();
@@ -369,7 +371,7 @@ void main() {
             throw RealmException('');
           });
 
-          expect(
+          await expectLater(
             authentication.register(
               username: username,
               nickname: null,
@@ -382,7 +384,7 @@ void main() {
 
       test(
         'throws a [ResourceException] upon failure to hash the password.',
-        () {
+        () async {
           authentication = FaultyTestAuthenticationRepository(
             database: database,
             thrower: () {
@@ -392,7 +394,7 @@ void main() {
 
           stubFinder<Account>(database.realm, () => null);
 
-          expect(
+          await expectLater(
             authentication.register(
               username: username,
               nickname: null,

@@ -39,7 +39,7 @@ void main() {
       });
 
       test(
-        'does not throw a [StateError] with [allowMultipleInitialise] when'
+        'does not throw a [StateError] with [allowMultipleInitialise] when '
         'already initialised.',
         () async {
           final test = MultipleInitialiseTestRepository();
