@@ -9,7 +9,6 @@ abstract class ApplicationLoader<T>
   @override
   final Sprint log;
 
-  // TODO(vxern): Test.
   T get value {
     final state = initialisationCubit.state;
     if (state is! InitialisedState<T>) {

@@ -2,7 +2,7 @@ import 'package:sprint/sprint.dart';
 
 import 'package:flutter_todos/utils.dart';
 
-class Repository with Loggable, Initialisable, Disposable {
+abstract class Repository with Loggable, Initialisable, Disposable {
   @override
   late final Sprint log;
 
