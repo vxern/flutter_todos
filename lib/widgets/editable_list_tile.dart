@@ -36,7 +36,7 @@ class EditCubit extends Cubit<EditState> {
 
 typedef VoidCallbackWithValue = void Function(String contents);
 
-class EditableListTile extends StatelessWidget {
+class EditableListTile extends StatefulWidget {
   final TextEditingController _textEditingController;
 
   final IconData icon;
@@ -48,10 +48,6 @@ class EditableListTile extends StatelessWidget {
 
   final VoidCallback? onTap;
 
-  final EditCubit editCubit = EditCubit();
-
-  String get text => _textEditingController.text;
-
   EditableListTile({
     required this.icon,
     required String initialContents,
@@ -62,12 +58,21 @@ class EditableListTile extends StatelessWidget {
     this.onTap,
   }) : _textEditingController = TextEditingController(text: initialContents);
 
+  @override
+  State<EditableListTile> createState() => _EditableListTileState();
+}
+
+class _EditableListTileState extends State<EditableListTile> {
+  final EditCubit editCubit = EditCubit();
+
+  String get text => widget._textEditingController.text;
+
   void _onStartEditing() {
     editCubit.declareEditing(originalValue: text);
   }
 
   void _onFinishEditing() {
-    onContentsSubmitted(text);
+    widget.onContentsSubmitted(text);
     editCubit.declareNotEditing();
   }
 
@@ -77,7 +82,7 @@ class EditableListTile extends StatelessWidget {
       return;
     }
 
-    _textEditingController.text = state.originalValue;
+    widget._textEditingController.text = state.originalValue;
 
     editCubit.declareCancelled();
   }
@@ -101,18 +106,18 @@ class EditableListTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 GestureDetector(
-                  onTap: onRemove,
+                  onTap: widget.onRemove,
                   child: Icon(
-                    icon,
+                    widget.icon,
                     color: Theme.of(context).listTileTheme.iconColor,
                   ),
                 ),
               ],
             ),
             title: TextField(
-              controller: _textEditingController,
+              controller: widget._textEditingController,
               decoration: const InputDecoration(border: InputBorder.none),
-              onChanged: onContentsChanged,
+              onChanged: widget.onContentsChanged,
               onTapOutside: (value) => _onFinishEditing(),
               onSubmitted: (value) => _onFinishEditing(),
               style: Theme.of(context).textTheme.labelLarge,
@@ -121,7 +126,7 @@ class EditableListTile extends StatelessWidget {
             tileColor: Theme.of(context).listTileTheme.tileColor,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            onTap: onTap,
+            onTap: widget.onTap,
           ),
         ),
       );
