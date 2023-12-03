@@ -85,40 +85,44 @@ class EditableListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocBuilder<EditCubit, EditState>(
         bloc: editCubit,
-        builder: (context, state) => ListTile(
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GestureDetector(
-                onTap:
-                    state is EditingState ? _onCancelEditing : _onStartEditing,
-                child: Icon(
-                  state is EditingState ? Icons.close : Icons.edit,
-                  color: Theme.of(context).listTileTheme.iconColor,
+        builder: (context, state) => TextFieldTapRegion(
+          child: ListTile(
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: state is EditingState
+                      ? _onCancelEditing
+                      : _onStartEditing,
+                  child: Icon(
+                    state is EditingState ? Icons.close : Icons.edit,
+                    color: Theme.of(context).listTileTheme.iconColor,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: onRemove,
-                child: Icon(
-                  icon,
-                  color: Theme.of(context).listTileTheme.iconColor,
+                const SizedBox(width: 4),
+                GestureDetector(
+                  onTap: onRemove,
+                  child: Icon(
+                    icon,
+                    color: Theme.of(context).listTileTheme.iconColor,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            title: TextField(
+              controller: _textEditingController,
+              decoration: const InputDecoration(border: InputBorder.none),
+              onChanged: onContentsChanged,
+              onTapOutside: (value) => _onFinishEditing(),
+              onSubmitted: (value) => _onFinishEditing(),
+              style: Theme.of(context).textTheme.labelLarge,
+              enabled: editCubit.state is EditingState,
+            ),
+            tileColor: Theme.of(context).listTileTheme.tileColor,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            onTap: onTap,
           ),
-          title: TextField(
-            controller: _textEditingController,
-            decoration: const InputDecoration(border: InputBorder.none),
-            onChanged: onContentsChanged,
-            onSubmitted: (value) => _onFinishEditing(),
-            style: Theme.of(context).textTheme.labelLarge,
-            enabled: editCubit.state is EditingState,
-          ),
-          tileColor: Theme.of(context).listTileTheme.tileColor,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          onTap: onTap,
         ),
       );
 }
