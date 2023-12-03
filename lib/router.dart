@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_todos/main.dart';
-import 'package:flutter_todos/widgets/foundation/initialisation-arbiter.dart';
+import 'package:flutter_todos/widgets/foundation/initialisation_arbiter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:flutter_todos/menus/home.dart';

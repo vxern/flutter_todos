@@ -11,7 +11,7 @@ import 'package:flutter_todos/repositories/database.dart';
 import 'package:flutter_todos/repositories/repository.dart';
 import 'package:flutter_todos/repositories/todos.dart';
 import 'package:flutter_todos/router.dart';
-import 'package:flutter_todos/widgets/foundation/initialisation-arbiter.dart';
+import 'package:flutter_todos/widgets/foundation/initialisation_arbiter.dart';
 
 void main() => runApp(
       bootstrap(
